@@ -13,6 +13,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 
 public class WordBattleView
 {
@@ -105,6 +109,14 @@ public class WordBattleView
 				textField.setHorizontalAlignment(JTextField.CENTER);
 				textField.setFont(new Font("Arial", Font.BOLD, 40));
 				textField.setPreferredSize(new Dimension(25,25));
+				
+				// Add document filter to restrict to single letters only
+				AbstractDocument doc = (AbstractDocument) textField.getDocument();
+				doc.setDocumentFilter(new LetterOnlyFilter());
+				
+				// Register with keyboard
+				keyboard.registerTextField(textField);
+				
 				boxes[row][col] = textField;
 				guessGrid1.add(textField);
 			}
@@ -122,6 +134,14 @@ public class WordBattleView
 				textField.setHorizontalAlignment(JTextField.CENTER);
 				textField.setFont(new Font("Arial", Font.BOLD, 40));
 				textField.setPreferredSize(new Dimension(25,25));
+				
+				// Add document filter to restrict to single letters only
+				AbstractDocument doc = (AbstractDocument) textField.getDocument();
+				doc.setDocumentFilter(new LetterOnlyFilter());
+				
+				// Register with keyboard
+				keyboard.registerTextField(textField);
+				
 				boxes2[row][col] = textField;
 				guessGrid2.add(textField);
 			}
@@ -141,5 +161,58 @@ public class WordBattleView
 		frame.add(centerPanel, BorderLayout.CENTER);
 		frame.setVisible(true);
 		
+	}
+}
+
+/**
+ * Document filter that only allows single uppercase letters
+ */
+class LetterOnlyFilter extends DocumentFilter
+{
+	@Override
+	public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+			throws BadLocationException
+	{
+		if (string == null)
+			return;
+		
+		// Only allow if it's a single character and it's a letter
+		if (string.length() == 1 && Character.isLetter(string.charAt(0)))
+		{
+			// Convert to uppercase
+			String upperString = string.toUpperCase();
+			// Only insert if field is empty
+			if (fb.getDocument().getLength() == 0)
+			{
+				super.insertString(fb, offset, upperString, attr);
+			}
+		}
+	}
+	
+	@Override
+	public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+			throws BadLocationException
+	{
+		if (text == null)
+			return;
+		
+		// Only allow if it's a single character and it's a letter
+		if (text.length() == 1 && Character.isLetter(text.charAt(0)))
+		{
+			// Convert to uppercase
+			String upperText = text.toUpperCase();
+			// Only replace if field currently has content
+			if (fb.getDocument().getLength() > 0)
+			{
+				super.replace(fb, offset, length, upperText, attrs);
+			}
+		}
+	}
+	
+	@Override
+	public void remove(FilterBypass fb, int offset, int length) throws BadLocationException
+	{
+		// Allow removal
+		super.remove(fb, offset, length);
 	}
 }
