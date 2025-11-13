@@ -112,10 +112,6 @@ public class WordBattleView
 		
 		}
 		
-//		JLabel guessGrid1 = new JLabel("guessGrid1", SwingConstants.CENTER);
-//		guessGrid1.setFont(new Font("Arial", Font.BOLD, 50));
-//		guessGrid1.setPreferredSize(new Dimension(0,100));
-		//frame.add(guessGrid1, BorderLayout.CENTER);
 		
 		JLabel guessGrid2 = new JLabel("guessGrid2", SwingConstants.CENTER);
 		guessGrid2.setFont(new Font("Arial", Font.BOLD, 50));
