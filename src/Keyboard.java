@@ -68,9 +68,9 @@ public class Keyboard extends JPanel
 			}
 			else if (letter.equals("ENTER"))
 			{
-				button.setPreferredSize(new Dimension(90, 65));
-				button.setMinimumSize(new Dimension(90, 65));
-				button.setMaximumSize(new Dimension(90, 65));
+				button.setPreferredSize(new Dimension(130, 65));
+				button.setMinimumSize(new Dimension(130, 65));
+				button.setMaximumSize(new Dimension(130, 65));
 				button.addActionListener(e -> handleEnter());
 			}
 			else
