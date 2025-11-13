@@ -87,9 +87,7 @@ public class WordBattleView
         gameName.setPreferredSize(new Dimension(0,100));
 		frame.add(gameName, BorderLayout.NORTH);
 		
-		JLabel keyboard = new JLabel("Keyboard", SwingConstants.CENTER);
-		keyboard.setFont(new Font("Arial", Font.BOLD, 50));
-		keyboard.setPreferredSize(new Dimension(0,100));
+		Keyboard keyboard = new Keyboard();
 		frame.add(keyboard, BorderLayout.SOUTH);
 		
 		JPanel centerPanel = new JPanel();
