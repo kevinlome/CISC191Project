@@ -3,21 +3,28 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Image;
 
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 public class WordBattleView
 {
+	
+	
 	public static void main(String[] args)
 	{
 		
-		String playerName1 = JOptionPane.showInputDialog(null, "Enter Player 1 Name:", "User Input", JOptionPane.QUESTION_MESSAGE);
-		String playerName2 = JOptionPane.showInputDialog(null, "Enter Player 2 Name:", "User Input", JOptionPane.QUESTION_MESSAGE);
+		String playerName1 = JOptionPane.showInputDialog(null, "Enter Player 1 Name:", "Word Battle", JOptionPane.QUESTION_MESSAGE);
+		String playerName2 = JOptionPane.showInputDialog(null, "Enter Player 2 Name:", "Word Battle", JOptionPane.QUESTION_MESSAGE);
 		
+		//Creates JFrame for application
 		JFrame frame = new JFrame("Word Battle");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(1920,1080);
@@ -30,8 +37,7 @@ public class WordBattleView
 		Color greyColor = new Color(red, green, blue);
 		frame.getContentPane().setBackground(greyColor);
 		
-		frame.setVisible(true);
-		
+		//
 		JLabel gameName = new JLabel("Word Battle", SwingConstants.CENTER);
 		gameName.setFont(new Font("Arial", Font.BOLD, 50));
         gameName.setPreferredSize(new Dimension(0,100));
