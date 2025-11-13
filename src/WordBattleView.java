@@ -18,8 +18,10 @@ public class WordBattleView
 {
 	
 	
-	private static Object player1;
-	private static Object player2;
+	private static String player1;
+	private static String player2;
+	private static final int ROWS = 6;
+	private static final int COLS = 5;
 
 	public static void main(String[] args)
 	{
@@ -52,7 +54,7 @@ public class WordBattleView
         int result = JOptionPane.showConfirmDialog(
                 null,
                 panel,
-                "Enter Player Names",
+                "Word Battle",
                 JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE,
                 icon
@@ -65,10 +67,8 @@ public class WordBattleView
             player1 = "Player 1";
             player2 = "Player 2";
         }
-//		String playerName1 = JOptionPane.showInputDialog(null, "Enter Player 1 Name:", "Word Battle", JOptionPane.QUESTION_MESSAGE);
-//		String playerName2 = JOptionPane.showInputDialog(null, "Enter Player 2 Name:", "Word Battle", JOptionPane.QUESTION_MESSAGE);
 		
-		//Creates JFrame for application
+		//Creates JFrame for main application
 		JFrame frame = new JFrame("Word Battle");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(1920,1080);
@@ -96,9 +96,25 @@ public class WordBattleView
 		centerPanel.setBackground(greyColor1);
 		centerPanel.setLayout(new GridLayout(1,2,20,0));
 		
-		JLabel guessGrid1 = new JLabel("guessGrid1", SwingConstants.CENTER);
-		guessGrid1.setFont(new Font("Arial", Font.BOLD, 50));
-		guessGrid1.setPreferredSize(new Dimension(0,100));
+		JPanel guessGrid1 = new JPanel(new GridLayout(ROWS, COLS, 5, 5));
+		guessGrid1.setPreferredSize(new Dimension(20,20));
+		JTextField[][] boxes = new JTextField[ROWS][COLS];
+		for (int row = 0; row < ROWS; row++)
+		{
+			for (int col = 0; col < COLS; col++) 
+			{
+				JTextField textField = new JTextField(1);
+				textField.setHorizontalAlignment(JTextField.CENTER);
+				textField.setFont(new Font("Arial", Font.BOLD, 10));
+				boxes[row][col] = textField;
+				guessGrid1.add(textField);
+			}
+		
+		}
+		
+//		JLabel guessGrid1 = new JLabel("guessGrid1", SwingConstants.CENTER);
+//		guessGrid1.setFont(new Font("Arial", Font.BOLD, 50));
+//		guessGrid1.setPreferredSize(new Dimension(0,100));
 		//frame.add(guessGrid1, BorderLayout.CENTER);
 		
 		JLabel guessGrid2 = new JLabel("guessGrid2", SwingConstants.CENTER);
