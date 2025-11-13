@@ -97,7 +97,7 @@ public class WordBattleView
 		centerPanel.setLayout(new GridLayout(1,2,20,0));
 		
 		JPanel guessGrid1 = new JPanel(new GridLayout(ROWS, COLS, 5, 5));
-		guessGrid1.setPreferredSize(new Dimension(20,20));
+		guessGrid1.setPreferredSize(new Dimension(400,400));
 		JTextField[][] boxes = new JTextField[ROWS][COLS];
 		for (int row = 0; row < ROWS; row++)
 		{
@@ -105,24 +105,43 @@ public class WordBattleView
 			{
 				JTextField textField = new JTextField(1);
 				textField.setHorizontalAlignment(JTextField.CENTER);
-				textField.setFont(new Font("Arial", Font.BOLD, 10));
+				textField.setFont(new Font("Arial", Font.BOLD, 40));
+				textField.setPreferredSize(new Dimension(25,25));
 				boxes[row][col] = textField;
 				guessGrid1.add(textField);
 			}
-		
 		}
 		
 		
-		JLabel guessGrid2 = new JLabel("guessGrid2", SwingConstants.CENTER);
-		guessGrid2.setFont(new Font("Arial", Font.BOLD, 50));
-		guessGrid2.setPreferredSize(new Dimension(0,100));
-		//frame.add(guessGrid2, BorderLayout.CENTER);
+		JPanel guessGrid2 = new JPanel(new GridLayout(ROWS, COLS, 5, 5));
+		guessGrid2.setPreferredSize(new Dimension(400,400));
+		JTextField[][] boxes2 = new JTextField[ROWS][COLS];
+		for (int row = 0; row < ROWS; row++)
+		{
+			for (int col = 0; col < COLS; col++) 
+			{
+				JTextField textField = new JTextField(1);
+				textField.setHorizontalAlignment(JTextField.CENTER);
+				textField.setFont(new Font("Arial", Font.BOLD, 40));
+				textField.setPreferredSize(new Dimension(25,25));
+				boxes2[row][col] = textField;
+				guessGrid2.add(textField);
+			}
+		}
+
 		
-		centerPanel.add(guessGrid1);
-		centerPanel.add(guessGrid2);
+		JPanel gridWrapper1 = new JPanel();
+		gridWrapper1.setBackground(greyColor1);
+		gridWrapper1.setPreferredSize(new Dimension(300,300));
+		gridWrapper1.add(guessGrid1);
+		centerPanel.add(gridWrapper1);
+		JPanel gridWrapper2 = new JPanel();
+		gridWrapper2.setBackground(greyColor1);
+		gridWrapper2.setPreferredSize(new Dimension(300,300));
+		gridWrapper2.add(guessGrid2);
+		centerPanel.add(gridWrapper2);
 		frame.add(centerPanel, BorderLayout.CENTER);
 		frame.setVisible(true);
-		
 		
 	}
 }
