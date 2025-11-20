@@ -8,7 +8,10 @@ public class WordBattleModel
 	private boolean player1Won;
 	private boolean player2Won;
 	private boolean isPlayer1Turn;
-	private static final int MAX_TURNS = 10;
+	private static final int MAX_TURNS = 6;
+	private WordGenerator wordGenerator;
+	private String player1TargetWord;
+	private String player2TargetWord;
 	
 	/**
 	 * Constructor for WordBattleModel
@@ -24,6 +27,21 @@ public class WordBattleModel
 		this.player1Won = false;
 		this.player2Won = false;
 		this.isPlayer1Turn = true;
+		this.wordGenerator = new WordGenerator();
+		initializeTargetWords();
+	}
+	
+	/**
+	 * Initializes target words for both players from the WordGenerator
+	 */
+	private void initializeTargetWords()
+	{
+		String[] words = wordGenerator.generateWordsForPlayers();
+		if (words != null && words.length == 2)
+		{
+			this.player1TargetWord = words[0];
+			this.player2TargetWord = words[1];
+		}
 	}
 	
 	/**
@@ -188,5 +206,67 @@ public class WordBattleModel
 			return player2;
 		}
 		return null;
+	}
+	
+	/**
+	 * Gets the target word that player 1 is trying to guess
+	 * @return the target word for player 1
+	 */
+	public String getPlayer1TargetWord()
+	{
+		return player1TargetWord;
+	}
+	
+	/**
+	 * Gets the target word that player 2 is trying to guess
+	 * @return the target word for player 2
+	 */
+	public String getPlayer2TargetWord()
+	{
+		return player2TargetWord;
+	}
+	
+	/**
+	 * Checks if the current player's guess matches their target word
+	 * If it matches, marks the player as won and checks for game end
+	 * @param guess the word guessed by the current player
+	 * @return true if the guess matches the target word, false otherwise
+	 */
+	public boolean checkGuess(String guess)
+	{
+		if (guess == null)
+		{
+			return false;
+		}
+		
+		String normalizedGuess = guess.trim().toUpperCase();
+		
+		if (isPlayer1Turn)
+		{
+			if (normalizedGuess.equals(player1TargetWord))
+			{
+				setPlayer1Won();
+				return true;
+			}
+		}
+		else
+		{
+			if (normalizedGuess.equals(player2TargetWord))
+			{
+				setPlayer2Won();
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Gets the target word for the current player
+	 * @return the target word that the current player is trying to guess
+	 */
+	public String getCurrentPlayerTargetWord()
+	{
+		return isPlayer1Turn ? player1TargetWord : player2TargetWord;
 	}
 }

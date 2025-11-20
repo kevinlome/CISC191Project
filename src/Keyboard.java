@@ -20,6 +20,9 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	private Map<String, JButton> letterButtons;
 	private JTextField currentTextField;
+	private WordBattleModel model;
+	private JTextField[][] currentGrid;
+	private int currentRow;
 	
 	public Keyboard()
 	{
@@ -34,6 +37,23 @@ public class Keyboard extends JPanel implements KeyListener
 		addKeyListener(this);
 		
 		createKeyboardRows();
+	}
+	
+	/**
+	 * Set the model for guess checking
+	 */
+	public void setModel(WordBattleModel model)
+	{
+		this.model = model;
+	}
+	
+	/**
+	 * Set the current grid and row for guess submission
+	 */
+	public void setCurrentGrid(JTextField[][] grid, int row)
+	{
+		this.currentGrid = grid;
+		this.currentRow = row;
 	}
 	
 	private void createKeyboardRows()
@@ -133,9 +153,72 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	private void handleEnter()
 	{
-		if (currentTextField != null)
+		if (currentTextField != null && model != null && currentGrid != null)
 		{
-			// Move to next text field or handle submission
+			// Get the complete word from the current row
+			StringBuilder guessBuilder = new StringBuilder();
+			for (int col = 0; col < currentGrid[currentRow].length; col++)
+			{
+				String text = currentGrid[currentRow][col].getText();
+				if (!text.isEmpty())
+				{
+					guessBuilder.append(text);
+				}
+			}
+			
+			String guess = guessBuilder.toString();
+			
+			// Check if the guess is complete (5 letters)
+			if (guess.length() == 5)
+			{
+				// Check if the guess matches the target word
+				if (model.checkGuess(guess))
+				{
+					// Victory! Display message
+					String playerName = model.isPlayer1Turn() ? "Player 1" : "Player 2";
+					JOptionPane.showMessageDialog(null,
+							playerName + " wins! The word was: " + guess,
+							"Victory!",
+							JOptionPane.INFORMATION_MESSAGE);
+					
+					// End the game
+					model.endGame();
+					return;
+				}
+				else
+				{
+					// Incorrect guess, move to next row
+					currentRow++;
+					if (currentRow >= 6)
+					{
+						// Game over - max turns reached
+						JOptionPane.showMessageDialog(null,
+								"Game Over! You didn't guess the word.",
+								"Game Over",
+								JOptionPane.INFORMATION_MESSAGE);
+						model.endGame();
+						return;
+					}
+					
+					// Move focus to first cell of next row
+					if (currentRow < currentGrid.length)
+					{
+						currentGrid[currentRow][0].requestFocus();
+					}
+				}
+			}
+			else
+			{
+				// Incomplete guess
+				JOptionPane.showMessageDialog(null,
+						"Please enter a complete 5-letter word!",
+						"Incomplete Word",
+						JOptionPane.WARNING_MESSAGE);
+			}
+		}
+		else if (currentTextField != null)
+		{
+			// Fallback if model not set
 			KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 			manager.focusNextComponent();
 		}

@@ -33,6 +33,9 @@ public class WordBattleView
 	private static JTextField[][] boxes;
 	private static JTextField[][] boxes2;
 	private static Keyboard keyboard;
+	private static WordBattleModel model;
+	private static int currentRow1 = 0;
+	private static int currentRow2 = 0;
 
 	public static void main(String[] args)
 	{
@@ -107,6 +110,12 @@ public class WordBattleView
             player2 = "Player 2";
         }
 		
+		// Create Player instances and initialize the model
+		Player p1 = new Player();
+		Player p2 = new Player();
+		model = new WordBattleModel(p1, p2);
+		model.startGame();
+		
 		//Creates JFrame for main application
 		JFrame frame = new JFrame("Word Battle");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -127,6 +136,7 @@ public class WordBattleView
 		frame.add(gameName, BorderLayout.NORTH);
 		
 		keyboard = new Keyboard();
+		keyboard.setModel(model);
 		frame.add(keyboard, BorderLayout.SOUTH);
 		
 		JPanel centerPanel = new JPanel();
@@ -153,6 +163,16 @@ public class WordBattleView
 				final int gridRow = row;
 				final int gridCol = col;
 				
+				// Add focus listener to set keyboard's current grid
+				textField.addFocusListener(new java.awt.event.FocusAdapter()
+				{
+					@Override
+					public void focusGained(java.awt.event.FocusEvent e)
+					{
+						keyboard.setCurrentGrid(boxes, gridRow);
+					}
+				});
+				
 				// Add document listener to handle grid progression on macOS
 				textField.getDocument().addDocumentListener(new DocumentListener()
 				{
@@ -163,6 +183,8 @@ public class WordBattleView
 						{
 							SwingUtilities.invokeLater(() -> {
 								moveToNextCell(boxes, gridRow, gridCol);
+								currentRow1 = gridRow;
+								keyboard.setCurrentGrid(boxes, gridRow);
 							});
 						}
 					}
@@ -203,6 +225,16 @@ public class WordBattleView
 				final int gridRow = row;
 				final int gridCol = col;
 				
+				// Add focus listener to set keyboard's current grid
+				textField.addFocusListener(new java.awt.event.FocusAdapter()
+				{
+					@Override
+					public void focusGained(java.awt.event.FocusEvent e)
+					{
+						keyboard.setCurrentGrid(boxes2, gridRow);
+					}
+				});
+				
 				// Add document listener to handle grid progression on macOS
 				textField.getDocument().addDocumentListener(new DocumentListener()
 				{
@@ -213,6 +245,8 @@ public class WordBattleView
 						{
 							SwingUtilities.invokeLater(() -> {
 								moveToNextCell(boxes2, gridRow, gridCol);
+								currentRow2 = gridRow;
+								keyboard.setCurrentGrid(boxes2, gridRow);
 							});
 						}
 					}
