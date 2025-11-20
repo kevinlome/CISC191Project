@@ -5,6 +5,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 
@@ -13,20 +15,55 @@ public class Keyboard extends JPanel implements KeyListener
 	private static final Color GREY = new Color(82, 81, 81);
 	private static final Color TEXT_COLOR = Color.WHITE;
 	private static final Color BUTTON_COLOR = new Color(129, 131, 132);
+	private static final Color CORRECT_COLOR = new Color(106, 170, 100); // Green
+	private static final Color WRONG_POSITION_COLOR = new Color(181, 159, 59); // Yellow
+	private static final Color NOT_IN_WORD_COLOR = new Color(58, 58, 58); // Dark Gray
 	
 	private String[] row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
 	private String[] row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L"};
 	private String[] row3 = {"DELETE", "Z", "X", "C", "V", "B", "N", "M", "ENTER"};
 	
 	private Map<String, JButton> letterButtons;
+	private Map<String, Integer> letterStatus; // 0=unused, 1=wrong position, 2=correct, 3=not in word
 	private JTextField currentTextField;
+	private JTextField[][] currentGridPlayer1;
+	private JTextField[][] currentGridPlayer2;
 	private WordBattleModel model;
-	private JTextField[][] currentGrid;
 	private int currentRow;
+	private int currentCol;
+	private static final int GRID_ROWS = 6;
+	private static final int GRID_COLS = 5;
+	private String player1Name = "Player 1";
+	private String player2Name = "Player 2";
 	
 	public Keyboard()
 	{
 		this.letterButtons = new HashMap<>();
+		this.letterStatus = new HashMap<>();
+		
+		// Initialize all letters with unused status (0)
+		for (String letter : row1)
+		{
+			if (!letter.equals("DELETE") && !letter.equals("ENTER"))
+			{
+				letterStatus.put(letter, 0);
+			}
+		}
+		for (String letter : row2)
+		{
+			if (!letter.equals("DELETE") && !letter.equals("ENTER"))
+			{
+				letterStatus.put(letter, 0);
+			}
+		}
+		for (String letter : row3)
+		{
+			if (!letter.equals("DELETE") && !letter.equals("ENTER"))
+			{
+				letterStatus.put(letter, 0);
+			}
+		}
+		
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBackground(GREY);
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -48,12 +85,91 @@ public class Keyboard extends JPanel implements KeyListener
 	}
 	
 	/**
-	 * Set the current grid and row for guess submission
+	 * Set the player names for display purposes
+	 */
+	public void setPlayerNames(String player1, String player2)
+	{
+		this.player1Name = player1;
+		this.player2Name = player2;
+	}
+	
+	/**
+	 * Set both grids for the game
+	 */
+	public void setGrids(JTextField[][] gridPlayer1, JTextField[][] gridPlayer2)
+	{
+		this.currentGridPlayer1 = gridPlayer1;
+		this.currentGridPlayer2 = gridPlayer2;
+	}
+	
+	/**
+	 * Set the current grid and row based on whose turn it is
 	 */
 	public void setCurrentGrid(JTextField[][] grid, int row)
 	{
-		this.currentGrid = grid;
-		this.currentRow = row;
+		// Update the appropriate grid based on which grid was passed
+		if (grid == currentGridPlayer1)
+		{
+			currentGridPlayer1 = grid;
+		}
+		else if (grid == currentGridPlayer2)
+		{
+			currentGridPlayer2 = grid;
+		}
+		currentRow = row;
+	}
+	
+	/**
+	 * Get the current grid based on whose turn it is
+	 */
+	private JTextField[][] getCurrentGrid()
+	{
+		return model != null && model.isPlayer1Turn() ? currentGridPlayer1 : currentGridPlayer2;
+	}
+	
+	/**
+	 * Update letter status based on game feedback
+	 * status: 0=unused, 1=wrong position (yellow), 2=correct (green), 3=not in word (gray)
+	 */
+	public void updateLetterStatus(String letter, int status)
+	{
+		// Only update if the new status is "worse" (higher number) than current
+		Integer currentStatus = letterStatus.get(letter);
+		if (currentStatus == null || status > currentStatus)
+		{
+			letterStatus.put(letter, status);
+			updateButtonColor(letter);
+		}
+	}
+	
+	/**
+	 * Update the button color based on letter status
+	 */
+	private void updateButtonColor(String letter)
+	{
+		JButton button = letterButtons.get(letter);
+		if (button != null)
+		{
+			Integer status = letterStatus.get(letter);
+			if (status != null)
+			{
+				switch (status)
+				{
+					case 2: // Correct
+						button.setBackground(CORRECT_COLOR);
+						break;
+					case 1: // Wrong position
+						button.setBackground(WRONG_POSITION_COLOR);
+						break;
+					case 3: // Not in word
+						button.setBackground(NOT_IN_WORD_COLOR);
+						break;
+					default: // Unused
+						button.setBackground(BUTTON_COLOR);
+				}
+				button.setOpaque(true);
+			}
+		}
 	}
 	
 	private void createKeyboardRows()
@@ -116,6 +232,7 @@ public class Keyboard extends JPanel implements KeyListener
 			button.setFocusPainted(false);
 			button.setOpaque(true);
 			button.setMargin(new Insets(0, 0, 0, 0));
+			button.setFocusable(false);
 			
 			letterButtons.put(letter, button);
 			rowPanel.add(button);
@@ -126,14 +243,40 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	private void handleLetterInput(String letter)
 	{
+		// Get the current grid based on whose turn it is
+		JTextField[][] currentGrid = getCurrentGrid();
+		
+		// Only allow input in the row corresponding to the current turn
+		if (model != null && currentRow != (model.getCurrentTurn() - 1))
+		{
+			System.out.println("Input blocked: Current turn is " + model.getCurrentTurn() + ", but trying to input in row " + currentRow);
+			return;
+		}
+		
 		if (currentTextField != null && currentTextField.getText().isEmpty())
 		{
 			try
 			{
 				// Insert through the document to trigger the filter properly
 				currentTextField.getDocument().insertString(0, letter, null);
-				// Ensure the text field maintains focus after button click
-				currentTextField.requestFocus();
+				System.out.println("Letter inserted: " + letter + " at [" + currentRow + "][" + currentCol + "]");
+				
+				// Move focus to the next cell
+				SwingUtilities.invokeLater(() -> {
+					int nextCol = currentCol + 1;
+					int nextRow = currentRow;
+					
+					// If we've reached the end of the row, stay in same row (don't wrap)
+					if (nextCol >= GRID_COLS)
+					{
+						nextCol = GRID_COLS - 1;
+					}
+					
+					if (currentGrid != null && nextRow < GRID_ROWS && nextCol < GRID_COLS)
+					{
+						currentGrid[nextRow][nextCol].requestFocus();
+					}
+				});
 			}
 			catch (Exception e)
 			{
@@ -144,15 +287,82 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	private void handleDelete()
 	{
+		JTextField[][] currentGrid = getCurrentGrid();
+		
 		if (currentTextField != null)
 		{
-			currentTextField.setText("");
-			currentTextField.requestFocus();
+			// If current cell is empty, move to previous cell and clear it
+			if (currentTextField.getText().isEmpty() && currentGrid != null)
+			{
+				// Move to previous cell
+				final int prevCol = currentCol - 1;
+				final int prevRow = currentRow;
+				
+				// Calculate final position
+				int finalCol = prevCol;
+				int finalRow = prevRow;
+				
+				// If at the beginning of a row, move to end of previous row
+				if (finalCol < 0)
+				{
+					finalRow--;
+					finalCol = GRID_COLS - 1;
+				}
+				
+				// If we went before the start, stay at the beginning
+				if (finalRow < 0)
+				{
+					finalRow = 0;
+					finalCol = 0;
+				}
+				
+				final int targetRow = finalRow;
+				final int targetCol = finalCol;
+				
+				// Clear the previous cell and move focus there
+				clearTextField(currentGrid[targetRow][targetCol]);
+				SwingUtilities.invokeLater(() -> {
+					currentGrid[targetRow][targetCol].requestFocus();
+					// Update current position to the previous cell
+					currentRow = targetRow;
+					currentCol = targetCol;
+					currentTextField = currentGrid[targetRow][targetCol];
+				});
+				System.out.println("DELETE: Moved to previous cell [" + targetRow + "][" + targetCol + "] and cleared it");
+			}
+			else
+			{
+				// If current cell has content, just clear it
+				clearTextField(currentTextField);
+				System.out.println("DELETE: Cleared current cell");
+				SwingUtilities.invokeLater(() -> currentTextField.requestFocus());
+			}
+		}
+	}
+	
+	/**
+	 * Helper method to clear a text field by removing all its content
+	 */
+	private void clearTextField(JTextField textField)
+	{
+		try
+		{
+			int length = textField.getDocument().getLength();
+			if (length > 0)
+			{
+				textField.getDocument().remove(0, length);
+			}
+		}
+		catch (BadLocationException e)
+		{
+			e.printStackTrace();
 		}
 	}
 	
 	private void handleEnter()
 	{
+		JTextField[][] currentGrid = getCurrentGrid();
+		
 		if (currentTextField != null && model != null && currentGrid != null)
 		{
 			// Get the complete word from the current row
@@ -181,14 +391,26 @@ public class Keyboard extends JPanel implements KeyListener
 							"Victory!",
 							JOptionPane.INFORMATION_MESSAGE);
 					
+					// Mark all letters as correct
+					for (char c : guess.toCharArray())
+					{
+						updateLetterStatus(String.valueOf(c).toUpperCase(), 2);
+					}
+					
 					// End the game
 					model.endGame();
+					SwingUtilities.invokeLater(() -> currentTextField.requestFocus());
 					return;
 				}
 				else
 				{
-					// Incorrect guess, move to next row
-					currentRow++;
+					// Incorrect guess - analyze and update letter colors
+					analyzeGuess(guess, currentGrid, currentRow);
+					
+					// Move to next turn
+					model.nextTurn();
+					currentRow = model.getCurrentTurn() - 1;
+					
 					if (currentRow >= 6)
 					{
 						// Game over - max turns reached
@@ -197,14 +419,15 @@ public class Keyboard extends JPanel implements KeyListener
 								"Game Over",
 								JOptionPane.INFORMATION_MESSAGE);
 						model.endGame();
+						SwingUtilities.invokeLater(() -> currentTextField.requestFocus());
 						return;
 					}
 					
-					// Move focus to first cell of next row
-					if (currentRow < currentGrid.length)
-					{
-						currentGrid[currentRow][0].requestFocus();
-					}
+					// Get the next player's grid
+					JTextField[][] nextPlayerGrid = model.isPlayer1Turn() ? currentGridPlayer1 : currentGridPlayer2;
+					
+					// Switch to next player with popup and focus
+					switchPlayerTurn(nextPlayerGrid, currentRow);
 				}
 			}
 			else
@@ -214,6 +437,7 @@ public class Keyboard extends JPanel implements KeyListener
 						"Please enter a complete 5-letter word!",
 						"Incomplete Word",
 						JOptionPane.WARNING_MESSAGE);
+				SwingUtilities.invokeLater(() -> currentTextField.requestFocus());
 			}
 		}
 		else if (currentTextField != null)
@@ -221,6 +445,83 @@ public class Keyboard extends JPanel implements KeyListener
 			// Fallback if model not set
 			KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 			manager.focusNextComponent();
+		}
+	}
+	
+	/**
+	 * Analyze guess and update letter colors based on Wordle rules
+	 * Only updates keyboard feedback for the current player
+	 */
+	private void analyzeGuess(String guess, JTextField[][] grid, int row)
+	{
+		String targetWord = model.isPlayer1Turn() ? model.getPlayer1TargetWord() : model.getPlayer2TargetWord();
+		
+		// First pass: mark correct letters (green)
+		for (int i = 0; i < guess.length(); i++)
+		{
+			char letter = guess.charAt(i);
+			if (letter == targetWord.charAt(i))
+			{
+				updateLetterStatus(String.valueOf(letter), 2); // Green
+			}
+		}
+		
+		// Second pass: mark wrong position and not in word
+		for (int i = 0; i < guess.length(); i++)
+		{
+			char letter = guess.charAt(i);
+			if (letter != targetWord.charAt(i)) // Not in correct position
+			{
+				if (targetWord.contains(String.valueOf(letter)))
+				{
+					updateLetterStatus(String.valueOf(letter), 1); // Yellow
+				}
+				else
+				{
+					updateLetterStatus(String.valueOf(letter), 3); // Gray
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Clear all keyboard letter statuses (reset to unused state)
+	 * Called when switching players
+	 */
+	public void clearKeyboardFeedback()
+	{
+		for (String letter : letterStatus.keySet())
+		{
+			letterStatus.put(letter, 0);
+			updateButtonColor(letter);
+		}
+	}
+	
+	/**
+	 * Show turn indicator popup and focus on the correct grid
+	 */
+	public void switchPlayerTurn(JTextField[][] nextPlayerGrid, int nextRow)
+	{
+		String nextPlayerName = model.isPlayer1Turn() ? player1Name : player2Name;
+		
+		// Show popup message
+		JOptionPane.showMessageDialog(null,
+				nextPlayerName + "'s Turn!",
+				"Turn Switch",
+				JOptionPane.INFORMATION_MESSAGE);
+		
+		// Clear keyboard feedback for the new player
+		clearKeyboardFeedback();
+		
+		// Focus on the first cell of the player's current row
+		if (nextPlayerGrid != null && nextRow < nextPlayerGrid.length)
+		{
+			SwingUtilities.invokeLater(() -> {
+				nextPlayerGrid[nextRow][0].requestFocus();
+				currentTextField = nextPlayerGrid[nextRow][0];
+				currentRow = nextRow;
+				currentCol = 0;
+			});
 		}
 	}
 	
@@ -256,18 +557,65 @@ public class Keyboard extends JPanel implements KeyListener
 	 */
 	public void registerTextField(JTextField textField)
 	{
+		registerTextField(textField, null, 0, 0);
+	}
+	
+	/**
+	 * Register a text field with grid tracking for delete functionality
+	 */
+	public void registerTextField(JTextField textField, JTextField[][] grid, int row, int col)
+	{
 		textField.addFocusListener(new java.awt.event.FocusAdapter()
 		{
 			@Override
 			public void focusGained(java.awt.event.FocusEvent e)
 			{
 				setCurrentTextField(textField);
+				currentRow = row;
+				currentCol = col;
+				System.out.println("Text field focused: [" + row + "][" + col + "]");
 			}
 			
 			@Override
 			public void focusLost(java.awt.event.FocusEvent e)
 			{
-				setCurrentTextField(null);
+				// Only clear if focus went to a non-keyboard component
+				if (!e.isTemporary())
+				{
+					System.out.println("Text field lost focus (permanent)");
+					setCurrentTextField(null);
+				}
+			}
+		});
+		
+		// Add a mouse listener to capture clicks on the text field
+		textField.addMouseListener(new java.awt.event.MouseAdapter()
+		{
+			@Override
+			public void mousePressed(java.awt.event.MouseEvent e)
+			{
+				setCurrentTextField(textField);
+				currentRow = row;
+				currentCol = col;
+				textField.requestFocus();
+				System.out.println("Text field clicked, set to [" + row + "][" + col + "]");
+			}
+		});
+		
+		// Add a key listener to handle backspace key
+		textField.addKeyListener(new java.awt.event.KeyAdapter()
+		{
+			@Override
+			public void keyPressed(java.awt.event.KeyEvent e)
+			{
+				if (e.getKeyCode() == java.awt.event.KeyEvent.VK_BACK_SPACE)
+				{
+					setCurrentTextField(textField);
+					currentRow = row;
+					currentCol = col;
+					handleDelete();
+					e.consume();
+				}
 			}
 		});
 	}

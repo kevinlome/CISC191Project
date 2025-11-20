@@ -137,6 +137,7 @@ public class WordBattleView
 		
 		keyboard = new Keyboard();
 		keyboard.setModel(model);
+		keyboard.setPlayerNames(player1, player2);
 		frame.add(keyboard, BorderLayout.SOUTH);
 		
 		JPanel centerPanel = new JPanel();
@@ -197,7 +198,7 @@ public class WordBattleView
 				});
 				
 				// Register with keyboard
-				keyboard.registerTextField(textField);
+				keyboard.registerTextField(textField, boxes, row, col);
 				
 				boxes[row][col] = textField;
 				guessGrid1.add(textField);
@@ -259,7 +260,7 @@ public class WordBattleView
 				});
 				
 				// Register with keyboard
-				keyboard.registerTextField(textField);
+				keyboard.registerTextField(textField, boxes2, row, col);
 				
 				boxes2[row][col] = textField;
 				guessGrid2.add(textField);
@@ -269,15 +270,30 @@ public class WordBattleView
 		
 		JPanel gridWrapper1 = new JPanel();
 		gridWrapper1.setBackground(greyColor1);
-		gridWrapper1.setPreferredSize(new Dimension(300,300));
-		gridWrapper1.add(guessGrid1);
+		gridWrapper1.setLayout(new java.awt.BorderLayout());
+		gridWrapper1.setPreferredSize(new Dimension(300,400));
+		JLabel player1Label = new JLabel(player1, SwingConstants.CENTER);
+		player1Label.setForeground(Color.WHITE);
+		player1Label.setFont(new Font("Arial", Font.BOLD, 24));
+		gridWrapper1.add(player1Label, BorderLayout.NORTH);
+		gridWrapper1.add(guessGrid1, BorderLayout.CENTER);
 		centerPanel.add(gridWrapper1);
+		
 		JPanel gridWrapper2 = new JPanel();
 		gridWrapper2.setBackground(greyColor1);
-		gridWrapper2.setPreferredSize(new Dimension(300,300));
-		gridWrapper2.add(guessGrid2);
+		gridWrapper2.setLayout(new java.awt.BorderLayout());
+		gridWrapper2.setPreferredSize(new Dimension(300,400));
+		JLabel player2Label = new JLabel(player2, SwingConstants.CENTER);
+		player2Label.setForeground(Color.WHITE);
+		player2Label.setFont(new Font("Arial", Font.BOLD, 24));
+		gridWrapper2.add(player2Label, BorderLayout.NORTH);
+		gridWrapper2.add(guessGrid2, BorderLayout.CENTER);
 		centerPanel.add(gridWrapper2);
 		frame.add(centerPanel, BorderLayout.CENTER);
+		
+		// Set both grids on the keyboard so it can switch between them
+		keyboard.setGrids(boxes, boxes2);
+		
 		frame.setVisible(true);
 		
 	}
