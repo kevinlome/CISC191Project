@@ -1,10 +1,14 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.SwingUtilities;
+import javax.swing.text.BadLocationException;
 
-public class Keyboard extends JPanel
+public class Keyboard extends JPanel implements KeyListener
 {
 	private static final Color GREY = new Color(82, 81, 81);
 	private static final Color TEXT_COLOR = Color.WHITE;
@@ -24,6 +28,10 @@ public class Keyboard extends JPanel
 		setBackground(GREY);
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setPreferredSize(new Dimension(0, 300));
+		
+		// Add key listener for physical keyboard support
+		setFocusable(true);
+		addKeyListener(this);
 		
 		createKeyboardRows();
 	}
@@ -100,7 +108,17 @@ public class Keyboard extends JPanel
 	{
 		if (currentTextField != null && currentTextField.getText().isEmpty())
 		{
-			currentTextField.setText(letter);
+			try
+			{
+				// Insert through the document to trigger the filter properly
+				currentTextField.getDocument().insertString(0, letter, null);
+				// Ensure the text field maintains focus after button click
+				currentTextField.requestFocus();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -109,6 +127,7 @@ public class Keyboard extends JPanel
 		if (currentTextField != null)
 		{
 			currentTextField.setText("");
+			currentTextField.requestFocus();
 		}
 	}
 	
@@ -169,4 +188,44 @@ public class Keyboard extends JPanel
 			}
 		});
 	}
+	
+	/**
+	 * Handle physical keyboard input
+	 */
+	private void handleKeyboardInput(KeyEvent e)
+	{
+		char keyChar = e.getKeyChar();
+		int keyCode = e.getKeyCode();
+		
+		// Handle letter keys - don't consume, let text field handle it
+		if (Character.isLetter(keyChar))
+		{
+			// Just let it pass through to the text field
+			return;
+		}
+		// Handle BACKSPACE as DELETE
+		else if (keyCode == 8) // KeyEvent.VK_BACKSPACE
+		{
+			handleDelete();
+			e.consume();
+		}
+		// Handle ENTER
+		else if (keyCode == 10) // KeyEvent.VK_ENTER
+		{
+			handleEnter();
+			e.consume();
+		}
+	}
+	
+	@Override
+	public void keyPressed(KeyEvent e)
+	{
+		handleKeyboardInput(e);
+	}
+	
+	@Override
+	public void keyReleased(KeyEvent e) {}
+	
+	@Override
+	public void keyTyped(KeyEvent e) {}
 }
