@@ -25,6 +25,8 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	private Map<String, JButton> letterButtons;
 	private Map<String, Integer> letterStatus; // 0=unused, 1=wrong position, 2=correct, 3=not in word
+	private Map<String, Integer> player1LetterStatus; // Stored feedback for Player 1
+	private Map<String, Integer> player2LetterStatus; // Stored feedback for Player 2
 	private JTextField currentTextField;
 	private JTextField[][] currentGridPlayer1;
 	private JTextField[][] currentGridPlayer2;
@@ -40,6 +42,8 @@ public class Keyboard extends JPanel implements KeyListener
 	{
 		this.letterButtons = new HashMap<>();
 		this.letterStatus = new HashMap<>();
+		this.player1LetterStatus = new HashMap<>();
+		this.player2LetterStatus = new HashMap<>();
 		
 		// Initialize all letters with unused status (0)
 		for (String letter : row1)
@@ -47,6 +51,8 @@ public class Keyboard extends JPanel implements KeyListener
 			if (!letter.equals("DELETE") && !letter.equals("ENTER"))
 			{
 				letterStatus.put(letter, 0);
+				player1LetterStatus.put(letter, 0);
+				player2LetterStatus.put(letter, 0);
 			}
 		}
 		for (String letter : row2)
@@ -54,6 +60,8 @@ public class Keyboard extends JPanel implements KeyListener
 			if (!letter.equals("DELETE") && !letter.equals("ENTER"))
 			{
 				letterStatus.put(letter, 0);
+				player1LetterStatus.put(letter, 0);
+				player2LetterStatus.put(letter, 0);
 			}
 		}
 		for (String letter : row3)
@@ -61,6 +69,8 @@ public class Keyboard extends JPanel implements KeyListener
 			if (!letter.equals("DELETE") && !letter.equals("ENTER"))
 			{
 				letterStatus.put(letter, 0);
+				player1LetterStatus.put(letter, 0);
+				player2LetterStatus.put(letter, 0);
 			}
 		}
 		
@@ -130,6 +140,7 @@ public class Keyboard extends JPanel implements KeyListener
 	/**
 	 * Update letter status based on game feedback
 	 * status: 0=unused, 1=wrong position (yellow), 2=correct (green), 3=not in word (gray)
+	 * Stores feedback for both current player and their history
 	 */
 	public void updateLetterStatus(String letter, int status)
 	{
@@ -138,6 +149,25 @@ public class Keyboard extends JPanel implements KeyListener
 		if (currentStatus == null || status > currentStatus)
 		{
 			letterStatus.put(letter, status);
+			
+			// Also store in the player-specific map
+			if (model != null && model.isPlayer1Turn())
+			{
+				Integer p1Status = player1LetterStatus.get(letter);
+				if (p1Status == null || status > p1Status)
+				{
+					player1LetterStatus.put(letter, status);
+				}
+			}
+			else if (model != null)
+			{
+				Integer p2Status = player2LetterStatus.get(letter);
+				if (p2Status == null || status > p2Status)
+				{
+					player2LetterStatus.put(letter, status);
+				}
+			}
+			
 			updateButtonColor(letter);
 		}
 	}
@@ -485,14 +515,27 @@ public class Keyboard extends JPanel implements KeyListener
 	}
 	
 	/**
-	 * Clear all keyboard letter statuses (reset to unused state)
-	 * Called when switching players
+	 * Clear and restore keyboard letter statuses based on player
+	 * When switching players, restores the feedback for the new player
 	 */
-	public void clearKeyboardFeedback()
+	public void restoreKeyboardFeedback()
 	{
+		if (model == null)
+			return;
+		
+		Map<String, Integer> playerFeedback = model.isPlayer1Turn() ? player1LetterStatus : player2LetterStatus;
+		
 		for (String letter : letterStatus.keySet())
 		{
-			letterStatus.put(letter, 0);
+			Integer status = playerFeedback.get(letter);
+			if (status != null)
+			{
+				letterStatus.put(letter, status);
+			}
+			else
+			{
+				letterStatus.put(letter, 0);
+			}
 			updateButtonColor(letter);
 		}
 	}
@@ -510,8 +553,8 @@ public class Keyboard extends JPanel implements KeyListener
 				"Turn Switch",
 				JOptionPane.INFORMATION_MESSAGE);
 		
-		// Clear keyboard feedback for the new player
-		clearKeyboardFeedback();
+		// Restore keyboard feedback for the new player
+		restoreKeyboardFeedback();
 		
 		// Focus on the first cell of the player's current row
 		if (nextPlayerGrid != null && nextRow < nextPlayerGrid.length)
