@@ -481,10 +481,14 @@ public class Keyboard extends JPanel implements KeyListener
 	/**
 	 * Analyze guess and update letter colors based on Wordle rules
 	 * Only updates keyboard feedback for the current player
+	 * Also updates the grid cell colors with feedback
 	 */
 	private void analyzeGuess(String guess, JTextField[][] grid, int row)
 	{
 		String targetWord = model.isPlayer1Turn() ? model.getPlayer1TargetWord() : model.getPlayer2TargetWord();
+		
+		// Create feedback array: 0=unused, 1=wrong position (yellow), 2=correct (green), 3=not in word (gray)
+		int[] feedback = new int[guess.length()];
 		
 		// First pass: mark correct letters (green)
 		for (int i = 0; i < guess.length(); i++)
@@ -493,6 +497,7 @@ public class Keyboard extends JPanel implements KeyListener
 			if (letter == targetWord.charAt(i))
 			{
 				updateLetterStatus(String.valueOf(letter), 2); // Green
+				feedback[i] = 2; // Correct position
 			}
 		}
 		
@@ -505,13 +510,18 @@ public class Keyboard extends JPanel implements KeyListener
 				if (targetWord.contains(String.valueOf(letter)))
 				{
 					updateLetterStatus(String.valueOf(letter), 1); // Yellow
+					feedback[i] = 1; // Wrong position
 				}
 				else
 				{
 					updateLetterStatus(String.valueOf(letter), 3); // Gray
+					feedback[i] = 3; // Not in word
 				}
 			}
 		}
+		
+		// Update the grid with feedback colors
+		WordBattleView.updateGridFeedback(grid, row, feedback);
 	}
 	
 	/**
@@ -628,20 +638,6 @@ public class Keyboard extends JPanel implements KeyListener
 					System.out.println("Text field lost focus (permanent)");
 					setCurrentTextField(null);
 				}
-			}
-		});
-		
-		// Add a mouse listener to capture clicks on the text field
-		textField.addMouseListener(new java.awt.event.MouseAdapter()
-		{
-			@Override
-			public void mousePressed(java.awt.event.MouseEvent e)
-			{
-				setCurrentTextField(textField);
-				currentRow = row;
-				currentCol = col;
-				textField.requestFocus();
-				System.out.println("Text field clicked, set to [" + row + "][" + col + "]");
 			}
 		});
 		

@@ -36,6 +36,10 @@ public class WordBattleView
 	private static WordBattleModel model;
 	private static int currentRow1 = 0;
 	private static int currentRow2 = 0;
+	private static final Color CORRECT_COLOR = new Color(106, 170, 100); // Green
+	private static final Color WRONG_POSITION_COLOR = new Color(181, 159, 59); // Yellow
+	private static final Color NOT_IN_WORD_COLOR = new Color(58, 58, 58); // Dark Gray
+	private static final Color DEFAULT_COLOR = new Color(60, 60, 60); // Default dark background
 
 	public static void main(String[] args)
 	{
@@ -130,9 +134,57 @@ public class WordBattleView
 		frame.getContentPane().setBackground(greyColor1);
 		
 		//
-		JLabel gameName = new JLabel("Word Battle", SwingConstants.CENTER);
-		gameName.setFont(new Font("Arial", Font.BOLD, 50));
-        gameName.setPreferredSize(new Dimension(0,100));
+		// Load the logo image from the LOGO folder
+		ImageIcon logoIcon = null;
+		try
+		{
+			// Method 1: Try loading from file system first (when running from project root)
+			java.io.File logoFile = new java.io.File("LOGO/WordBattleLogo.png");
+			if (logoFile.exists())
+			{
+				logoIcon = new ImageIcon(logoFile.getAbsolutePath());
+			}
+			else
+			{
+				// Method 2: Try loading from classpath
+				java.net.URL logoURL = WordBattleView.class.getResource("/WordBattleLogo.png");
+				if (logoURL != null)
+				{
+					logoIcon = new ImageIcon(logoURL);
+				}
+				else
+				{
+					// Method 3: Try from bin folder (compiled resources)
+					logoFile = new java.io.File("bin/LOGO/WordBattleLogo.png");
+					if (logoFile.exists())
+					{
+						logoIcon = new ImageIcon(logoFile.getAbsolutePath());
+					}
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			System.err.println("Error loading logo: " + e.getMessage());
+		}
+		
+		// Create the label - use text if image failed to load
+		JLabel gameName;
+		if (logoIcon != null && logoIcon.getIconWidth() > 0)
+		{
+			// Scale the image to fit nicely in the header
+			Image scaledLogo = logoIcon.getImage().getScaledInstance(400, 200, Image.SCALE_SMOOTH);
+			logoIcon = new ImageIcon(scaledLogo);
+			gameName = new JLabel(logoIcon, SwingConstants.CENTER);
+		}
+		else
+		{
+			// Fallback to text label if image loading fails
+			gameName = new JLabel("Word Battle", SwingConstants.CENTER);
+			gameName.setFont(new Font("Arial", Font.BOLD, 50));
+			gameName.setForeground(Color.WHITE);
+		}
+		gameName.setPreferredSize(new Dimension(0, 120));
 		frame.add(gameName, BorderLayout.NORTH);
 		
 		keyboard = new Keyboard();
@@ -155,6 +207,10 @@ public class WordBattleView
 				textField.setHorizontalAlignment(JTextField.CENTER);
 				textField.setFont(new Font("Arial", Font.BOLD, 40));
 				textField.setPreferredSize(new Dimension(25,25));
+				textField.setBackground(DEFAULT_COLOR);
+				textField.setForeground(Color.WHITE);
+				textField.setCaretColor(Color.WHITE);
+				textField.setFocusable(true); // Allow programmatic focus
 				
 				// Add document filter to restrict to single letters only
 				AbstractDocument doc = (AbstractDocument) textField.getDocument();
@@ -174,7 +230,7 @@ public class WordBattleView
 					}
 				});
 				
-				// Add document listener to handle grid progression on macOS
+				// Add document listener to handle grid progression within the same row
 				textField.getDocument().addDocumentListener(new DocumentListener()
 				{
 					@Override
@@ -183,9 +239,14 @@ public class WordBattleView
 						if (textField.getText().length() == 1)
 						{
 							SwingUtilities.invokeLater(() -> {
-								moveToNextCell(boxes, gridRow, gridCol);
-								currentRow1 = gridRow;
-								keyboard.setCurrentGrid(boxes, gridRow);
+								// Only move to next cell within the same row
+								int nextCol = gridCol + 1;
+								if (nextCol < COLS)
+								{
+									boxes[gridRow][nextCol].requestFocus();
+									currentRow1 = gridRow;
+									keyboard.setCurrentGrid(boxes, gridRow);
+								}
 							});
 						}
 					}
@@ -217,6 +278,10 @@ public class WordBattleView
 				textField.setHorizontalAlignment(JTextField.CENTER);
 				textField.setFont(new Font("Arial", Font.BOLD, 40));
 				textField.setPreferredSize(new Dimension(25,25));
+				textField.setBackground(DEFAULT_COLOR);
+				textField.setForeground(Color.WHITE);
+				textField.setCaretColor(Color.WHITE);
+				textField.setFocusable(true); // Allow programmatic focus only
 				
 				// Add document filter to restrict to single letters only
 				AbstractDocument doc = (AbstractDocument) textField.getDocument();
@@ -236,7 +301,7 @@ public class WordBattleView
 					}
 				});
 				
-				// Add document listener to handle grid progression on macOS
+				// Add document listener to handle grid progression within the same row
 				textField.getDocument().addDocumentListener(new DocumentListener()
 				{
 					@Override
@@ -245,9 +310,14 @@ public class WordBattleView
 						if (textField.getText().length() == 1)
 						{
 							SwingUtilities.invokeLater(() -> {
-								moveToNextCell(boxes2, gridRow, gridCol);
-								currentRow2 = gridRow;
-								keyboard.setCurrentGrid(boxes2, gridRow);
+								// Only move to next cell within the same row
+								int nextCol = gridCol + 1;
+								if (nextCol < COLS)
+								{
+									boxes2[gridRow][nextCol].requestFocus();
+									currentRow2 = gridRow;
+									keyboard.setCurrentGrid(boxes2, gridRow);
+								}
 							});
 						}
 					}
@@ -296,6 +366,36 @@ public class WordBattleView
 		
 		frame.setVisible(true);
 		
+	}
+	
+	/**
+	 * Update grid cell colors based on guess feedback
+	 * This is called from the Keyboard after analyzing a guess
+	 * @param grid The grid to update
+	 * @param row The row to update
+	 * @param feedback Array of feedback values: 0=unused, 1=wrong position (yellow), 2=correct (green), 3=not in word (gray)
+	 */
+	public static void updateGridFeedback(JTextField[][] grid, int row, int[] feedback)
+	{
+		for (int col = 0; col < COLS && col < feedback.length; col++)
+		{
+			Color cellColor = DEFAULT_COLOR;
+			switch (feedback[col])
+			{
+				case 2: // Correct
+					cellColor = CORRECT_COLOR;
+					break;
+				case 1: // Wrong position
+					cellColor = WRONG_POSITION_COLOR;
+					break;
+				case 3: // Not in word
+					cellColor = NOT_IN_WORD_COLOR;
+					break;
+				default: // Unused or default
+					cellColor = DEFAULT_COLOR;
+			}
+			grid[row][col].setBackground(cellColor);
+		}
 	}
 	
 	/**
