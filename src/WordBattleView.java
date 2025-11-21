@@ -173,7 +173,7 @@ public class WordBattleView
 		if (logoIcon != null && logoIcon.getIconWidth() > 0)
 		{
 			// Scale the image to fit nicely in the header
-			Image scaledLogo = logoIcon.getImage().getScaledInstance(400, 200, Image.SCALE_SMOOTH);
+			Image scaledLogo = logoIcon.getImage().getScaledInstance(125, 125, Image.SCALE_SMOOTH);
 			logoIcon = new ImageIcon(scaledLogo);
 			gameName = new JLabel(logoIcon, SwingConstants.CENTER);
 		}
@@ -195,8 +195,10 @@ public class WordBattleView
 		JPanel centerPanel = new JPanel();
 		centerPanel.setBackground(greyColor1);
 		centerPanel.setLayout(new GridLayout(1,2,20,0));
+		centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 		
 		JPanel guessGrid1 = new JPanel(new GridLayout(ROWS, COLS, 5, 5));
+		guessGrid1.setBackground(Color.BLACK);
 		guessGrid1.setPreferredSize(new Dimension(400,400));
 		boxes = new JTextField[ROWS][COLS];
 		for (int row = 0; row < ROWS; row++)
@@ -268,6 +270,7 @@ public class WordBattleView
 		
 		
 		JPanel guessGrid2 = new JPanel(new GridLayout(ROWS, COLS, 5, 5));
+		guessGrid2.setBackground(Color.BLACK);
 		guessGrid2.setPreferredSize(new Dimension(400,400));
 		boxes2 = new JTextField[ROWS][COLS];
 		for (int row = 0; row < ROWS; row++)
@@ -343,7 +346,7 @@ public class WordBattleView
 		gridWrapper1.setLayout(new java.awt.BorderLayout());
 		gridWrapper1.setPreferredSize(new Dimension(300,400));
 		JLabel player1Label = new JLabel(player1, SwingConstants.CENTER);
-		player1Label.setForeground(Color.WHITE);
+		player1Label.setForeground(Color.BLACK);
 		player1Label.setFont(new Font("Arial", Font.BOLD, 24));
 		gridWrapper1.add(player1Label, BorderLayout.NORTH);
 		gridWrapper1.add(guessGrid1, BorderLayout.CENTER);
@@ -354,7 +357,7 @@ public class WordBattleView
 		gridWrapper2.setLayout(new java.awt.BorderLayout());
 		gridWrapper2.setPreferredSize(new Dimension(300,400));
 		JLabel player2Label = new JLabel(player2, SwingConstants.CENTER);
-		player2Label.setForeground(Color.WHITE);
+		player2Label.setForeground(Color.BLACK);
 		player2Label.setFont(new Font("Arial", Font.BOLD, 24));
 		gridWrapper2.add(player2Label, BorderLayout.NORTH);
 		gridWrapper2.add(guessGrid2, BorderLayout.CENTER);
