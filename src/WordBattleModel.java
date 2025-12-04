@@ -239,7 +239,7 @@ public class WordBattleModel
 			return false;
 		}
 		
-		String normalizedGuess = guess.trim().toUpperCase();
+		String normalizedGuess = guess.trim().toLowerCase();
 		
 		if (isPlayer1Turn)
 		{
@@ -268,5 +268,16 @@ public class WordBattleModel
 	public String getCurrentPlayerTargetWord()
 	{
 		return isPlayer1Turn ? player1TargetWord : player2TargetWord;
+	}
+	
+	/**
+	 * Gets the feedback for a guess using LetterView analysis
+	 * @param guess the guessed word
+	 * @return array of feedback codes: 2=correct, 1=wrong position, 3=not in word
+	 */
+	public int[] getGuessFeedback(String guess)
+	{
+		String targetWord = isPlayer1Turn ? player1TargetWord : player2TargetWord;
+		return LetterView.analyzeFeedback(guess.toLowerCase(), targetWord.toLowerCase());
 	}
 }
