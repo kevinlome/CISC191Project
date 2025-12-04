@@ -40,6 +40,8 @@ public class WordBattleView
 	private static final Color WRONG_POSITION_COLOR = new Color(181, 159, 59); // Yellow
 	private static final Color NOT_IN_WORD_COLOR = new Color(58, 58, 58); // Dark Gray
 	private static final Color DEFAULT_COLOR = new Color(60, 60, 60); // Default dark background
+	private static boolean[] completedRows1; // Track completed rows for Player 1
+	private static boolean[] completedRows2; // Track completed rows for Player 2
 
 	public static void main(String[] args)
 	{
@@ -119,6 +121,15 @@ public class WordBattleView
 		Player p2 = new Player();
 		model = new WordBattleModel(p1, p2);
 		model.startGame();
+		
+		// Initialize completed rows tracking
+		completedRows1 = new boolean[ROWS];
+		completedRows2 = new boolean[ROWS];
+		for (int i = 0; i < ROWS; i++)
+		{
+			completedRows1[i] = false;
+			completedRows2[i] = false;
+		}
 		
 		//Creates JFrame for main application
 		JFrame frame = new JFrame("Word Battle");
@@ -203,8 +214,10 @@ public class WordBattleView
 		boxes = new JTextField[ROWS][COLS];
 		for (int row = 0; row < ROWS; row++)
 		{
+			final int gridRow = row;
 			for (int col = 0; col < COLS; col++) 
 			{
+				final int gridCol = col;
 				JTextField textField = new JTextField(1);
 				textField.setHorizontalAlignment(JTextField.CENTER);
 				textField.setFont(new Font("Arial", Font.BOLD, 40));
@@ -214,13 +227,19 @@ public class WordBattleView
 				textField.setCaretColor(Color.WHITE);
 				textField.setFocusable(true); // Allow programmatic focus
 				
+				// Disable mouse clicking on grid boxes
+				textField.addMouseListener(new java.awt.event.MouseAdapter()
+				{
+					@Override
+					public void mousePressed(java.awt.event.MouseEvent e)
+					{
+						e.consume(); // Consume the event to prevent focus change
+					}
+				});
+				
 				// Add document filter to restrict to single letters only
 				AbstractDocument doc = (AbstractDocument) textField.getDocument();
 				doc.setDocumentFilter(new LetterOnlyFilter());
-				
-				// Create a grid tracker for this text field
-				final int gridRow = row;
-				final int gridCol = col;
 				
 				// Add focus listener to set keyboard's current grid
 				textField.addFocusListener(new java.awt.event.FocusAdapter()
@@ -228,7 +247,16 @@ public class WordBattleView
 					@Override
 					public void focusGained(java.awt.event.FocusEvent e)
 					{
-						keyboard.setCurrentGrid(boxes, gridRow);
+						// Only allow focus if this is the current row and not completed
+						if (gridRow == currentRow1 && !completedRows1[gridRow])
+						{
+							keyboard.setCurrentGrid(boxes, gridRow);
+						}
+						else
+						{
+							// Move focus back to the current row
+							boxes[currentRow1][0].requestFocus();
+						}
 					}
 				});
 				
@@ -254,14 +282,25 @@ public class WordBattleView
 					}
 					
 					@Override
-					public void removeUpdate(DocumentEvent e) {}
+					public void removeUpdate(DocumentEvent e) 
+					{
+						// On backspace/delete, move to previous box if current is empty
+						if (textField.getText().isEmpty() && gridCol > 0)
+						{
+							SwingUtilities.invokeLater(() -> {
+								boxes[gridRow][gridCol - 1].requestFocus();
+							});
+						}
+					}
 					
 					@Override
 					public void changedUpdate(DocumentEvent e) {}
 				});
 				
-				// Register with keyboard
-				keyboard.registerTextField(textField, boxes, row, col);
+				// Add action listener for ENTER key
+				textField.addActionListener(e -> {
+					handleGuessSubmission(boxes, gridRow, gridRow);
+				});
 				
 				boxes[row][col] = textField;
 				guessGrid1.add(textField);
@@ -275,8 +314,10 @@ public class WordBattleView
 		boxes2 = new JTextField[ROWS][COLS];
 		for (int row = 0; row < ROWS; row++)
 		{
+			final int gridRow = row;
 			for (int col = 0; col < COLS; col++) 
 			{
+				final int gridCol = col;
 				JTextField textField = new JTextField(1);
 				textField.setHorizontalAlignment(JTextField.CENTER);
 				textField.setFont(new Font("Arial", Font.BOLD, 40));
@@ -286,13 +327,19 @@ public class WordBattleView
 				textField.setCaretColor(Color.WHITE);
 				textField.setFocusable(true); // Allow programmatic focus only
 				
+				// Disable mouse clicking on grid boxes
+				textField.addMouseListener(new java.awt.event.MouseAdapter()
+				{
+					@Override
+					public void mousePressed(java.awt.event.MouseEvent e)
+					{
+						e.consume(); // Consume the event to prevent focus change
+					}
+				});
+				
 				// Add document filter to restrict to single letters only
 				AbstractDocument doc = (AbstractDocument) textField.getDocument();
 				doc.setDocumentFilter(new LetterOnlyFilter());
-				
-				// Create a grid tracker for this text field
-				final int gridRow = row;
-				final int gridCol = col;
 				
 				// Add focus listener to set keyboard's current grid
 				textField.addFocusListener(new java.awt.event.FocusAdapter()
@@ -300,7 +347,16 @@ public class WordBattleView
 					@Override
 					public void focusGained(java.awt.event.FocusEvent e)
 					{
-						keyboard.setCurrentGrid(boxes2, gridRow);
+						// Only allow focus if this is the current row and not completed
+						if (gridRow == currentRow2 && !completedRows2[gridRow])
+						{
+							keyboard.setCurrentGrid(boxes2, gridRow);
+						}
+						else
+						{
+							// Move focus back to the current row
+							boxes2[currentRow2][0].requestFocus();
+						}
 					}
 				});
 				
@@ -326,10 +382,24 @@ public class WordBattleView
 					}
 					
 					@Override
-					public void removeUpdate(DocumentEvent e) {}
+					public void removeUpdate(DocumentEvent e) 
+					{
+						// On backspace/delete, move to previous box if current is empty
+						if (textField.getText().isEmpty() && gridCol > 0)
+						{
+							SwingUtilities.invokeLater(() -> {
+								boxes2[gridRow][gridCol - 1].requestFocus();
+							});
+						}
+					}
 					
 					@Override
 					public void changedUpdate(DocumentEvent e) {}
+				});
+				
+				// Add action listener for ENTER key
+				textField.addActionListener(e -> {
+					handleGuessSubmission(boxes2, gridRow, gridRow);
 				});
 				
 				// Register with keyboard
@@ -372,11 +442,115 @@ public class WordBattleView
 	}
 	
 	/**
+	 * Handle guess submission from ENTER key
+	 */
+	private static void handleGuessSubmission(JTextField[][] grid, int currentRow, int row)
+	{
+		// Collect the guess
+		StringBuilder guessBuilder = new StringBuilder();
+		for (int col = 0; col < COLS; col++)
+		{
+			String text = grid[row][col].getText();
+			if (!text.isEmpty())
+			{
+				guessBuilder.append(text);
+			}
+		}
+		
+		String guess = guessBuilder.toString();
+		
+		// Must be 5 letters
+		if (guess.length() != 5)
+		{
+			JOptionPane.showMessageDialog(null, "Please enter a complete 5-letter word!");
+			return;
+		}
+		
+		// Check if it's a valid word using WordChecker API
+		if (!WordChecker.isValidWord(guess))
+		{
+			JOptionPane.showMessageDialog(null, "Not in word list.");
+			// Clear the row
+			for (int col = 0; col < COLS; col++)
+			{
+				grid[row][col].setText("");
+			}
+			grid[row][0].requestFocus();
+			return;
+		}
+		
+		// Check if it's the target word
+		if (model.checkGuess(guess))
+		{
+			String playerName = model.isPlayer1Turn() ? player1 : player2;
+			JOptionPane.showMessageDialog(null, playerName + " wins! The word was: " + guess.toUpperCase());
+			model.endGame();
+			return;
+		}
+		
+		// Generate feedback using LetterView
+		int[] feedback = model.getGuessFeedback(guess);
+		updateGridFeedback(grid, row, feedback);
+		
+		// Lock this row - disable all boxes in the completed row
+		for (int col = 0; col < COLS; col++)
+		{
+			grid[row][col].setEditable(false);
+		}
+		
+		// Mark row as completed
+		if (grid == boxes)
+		{
+			completedRows1[row] = true;
+		}
+		else if (grid == boxes2)
+		{
+			completedRows2[row] = true;
+		}
+		
+		// Update keyboard button colors
+		for (int i = 0; i < 5; i++)
+		{
+			String letter = String.valueOf(guess.charAt(i)).toUpperCase();
+			keyboard.updateButtonColor(letter, feedback[i]);
+		}
+		
+		// Move to next turn
+		model.nextTurn();
+		int nextRow = model.getCurrentTurn() - 1;
+		
+		if (nextRow >= ROWS)
+		{
+			String targetWord = !model.isPlayer1Turn() ? model.getPlayer1TargetWord() : model.getPlayer2TargetWord();
+			String playerName = !model.isPlayer1Turn() ? player1 : player2;
+			JOptionPane.showMessageDialog(null, playerName + " didn't guess the word!\n\nThe word was: " + targetWord.toUpperCase());
+			model.endGame();
+			return;
+		}
+		
+		// Switch to next player - use the correct grid based on whose turn it is
+		JTextField[][] nextGrid = model.isPlayer1Turn() ? boxes : boxes2;
+		JOptionPane.showMessageDialog(null, (model.isPlayer1Turn() ? player1 : player2) + "'s Turn!");
+		
+		// Update keyboard feedback to show the new player's feedback
+		keyboard.updateKeyboardFeedback();
+		
+		// Update current row tracking
+		if (nextGrid == boxes)
+		{
+			currentRow1 = nextRow;
+		}
+		else if (nextGrid == boxes2)
+		{
+			currentRow2 = nextRow;
+		}
+		
+		nextGrid[nextRow][0].requestFocus();
+		keyboard.setCurrentGrid(nextGrid, nextRow);
+	}
+	
+	/**
 	 * Update grid cell colors based on guess feedback
-	 * This is called from the Keyboard after analyzing a guess
-	 * @param grid The grid to update
-	 * @param row The row to update
-	 * @param feedback Array of feedback values: 0=unused, 1=wrong position (yellow), 2=correct (green), 3=not in word (gray)
 	 */
 	public static void updateGridFeedback(JTextField[][] grid, int row, int[] feedback)
 	{
@@ -397,7 +571,11 @@ public class WordBattleView
 				default: // Unused or default
 					cellColor = DEFAULT_COLOR;
 			}
-			grid[row][col].setBackground(cellColor);
+			JTextField cell = grid[row][col];
+			cell.setOpaque(true);
+			cell.setBackground(cellColor);
+			cell.setCaretColor(cellColor); // Hide cursor with same color as background
+			cell.repaint(); // Force repaint
 		}
 	}
 	
