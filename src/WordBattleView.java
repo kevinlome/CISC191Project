@@ -482,8 +482,28 @@ public class WordBattleView
 		// Check if it's the target word
 		if (model.checkGuess(guess))
 		{
+			// Generate feedback using LetterView for the winning guess
+			int[] feedback = model.getGuessFeedback(guess);
+			updateGridFeedback(grid, row, feedback);
+			
+			// Lock the winning row
+			for (int col = 0; col < COLS; col++)
+			{
+				grid[row][col].setEditable(false);
+			}
+			
+			// Update keyboard button colors for winning guess
+			for (int i = 0; i < 5; i++)
+			{
+				String letter = String.valueOf(guess.charAt(i)).toUpperCase();
+				keyboard.updateButtonColor(letter, feedback[i]);
+			}
+			
 			String playerName = model.isPlayer1Turn() ? player1 : player2;
-			JOptionPane.showMessageDialog(null, playerName + " wins! The word was: " + guess.toUpperCase());
+			JOptionPane.showMessageDialog(null, 
+				playerName + " wins! The word was: " + guess.toUpperCase() + 
+				"\n\nPlayer 1 target: " + model.getPlayer1TargetWord().toUpperCase() +
+				"\nPlayer 2 target: " + model.getPlayer2TargetWord().toUpperCase());
 			model.endGame();
 			return;
 		}
@@ -523,7 +543,10 @@ public class WordBattleView
 		{
 			String targetWord = !model.isPlayer1Turn() ? model.getPlayer1TargetWord() : model.getPlayer2TargetWord();
 			String playerName = !model.isPlayer1Turn() ? player1 : player2;
-			JOptionPane.showMessageDialog(null, playerName + " didn't guess the word!\n\nThe word was: " + targetWord.toUpperCase());
+			JOptionPane.showMessageDialog(null, 
+				playerName + " didn't guess the word!\n\nThe word was: " + targetWord.toUpperCase() +
+				"\n\nPlayer 1 target: " + model.getPlayer1TargetWord().toUpperCase() +
+				"\nPlayer 2 target: " + model.getPlayer2TargetWord().toUpperCase());
 			model.endGame();
 			return;
 		}
