@@ -5,8 +5,6 @@ public class WordBattleModel
 	private Player player2;
 	private int currentTurn;
 	private boolean isGameActive;
-	private boolean player1Won;
-	private boolean player2Won;
 	private boolean isPlayer1Turn;
 	private static final int MAX_TURNS = 6;
 	private WordGenerator wordGenerator;
@@ -24,8 +22,6 @@ public class WordBattleModel
 		this.player2 = player2;
 		this.currentTurn = 1;
 		this.isGameActive = false;
-		this.player1Won = false;
-		this.player2Won = false;
 		this.isPlayer1Turn = true;
 		this.wordGenerator = new WordGenerator();
 		initializeTargetWords();
@@ -51,8 +47,6 @@ public class WordBattleModel
 	{
 		isGameActive = true;
 		currentTurn = 1;
-		player1Won = false;
-		player2Won = false;
 		isPlayer1Turn = true;
 	}
 	
@@ -111,30 +105,11 @@ public class WordBattleModel
 	}
 	
 	/**
-	 * Gets the current player
-	 * @return the player whose turn it is
-	 */
-	public Player getCurrentPlayer()
-	{
-		return isPlayer1Turn ? player1 : player2;
-	}
-	
-	/**
-	 * Gets the other player (not the current player)
-	 * @return the player who is not taking their turn
-	 */
-	public Player getOtherPlayer()
-	{
-		return isPlayer1Turn ? player2 : player1;
-	}
-	
-	/**
 	 * Marks player 1 as having won
 	 */
 	public void setPlayer1Won()
 	{
-		player1Won = true;
-		checkGameEnd();
+		// TODO: Implement win tracking if needed
 	}
 	
 	/**
@@ -142,8 +117,7 @@ public class WordBattleModel
 	 */
 	public void setPlayer2Won()
 	{
-		player2Won = true;
-		checkGameEnd();
+		// TODO: Implement win tracking if needed
 	}
 	
 	/**
@@ -152,7 +126,7 @@ public class WordBattleModel
 	 */
 	public boolean hasPlayer1Won()
 	{
-		return player1Won;
+		return false;
 	}
 	
 	/**
@@ -161,51 +135,16 @@ public class WordBattleModel
 	 */
 	public boolean hasPlayer2Won()
 	{
-		return player2Won;
+		return false;
 	}
 	
 	/**
-	 * Checks the game end condition:
-	 * Game ends when one player guesses their target word and the other does not
-	 * If both have won or both have not won on the same turn, game continues
+	 * Gets the target word for the current player
+	 * @return the target word that the current player is trying to guess
 	 */
-	private void checkGameEnd()
+	public String getCurrentPlayerTargetWord()
 	{
-		// Only check if both players have completed their turn in this round
-		if (isPlayer1Turn)
-		{
-			// Player 2 just won, but we need to wait for Player 1's turn
-			return;
-		}
-		
-		// Both players have now taken their turns in this round
-		// Game ends if exactly one player has won
-		if (player1Won && !player2Won)
-		{
-			endGame();
-		}
-		else if (player2Won && !player1Won)
-		{
-			endGame();
-		}
-		// If both won or neither won, continue the game
-	}
-	
-	/**
-	 * Gets the winner of the game
-	 * @return player1 if player1 won, player2 if player2 won, null if game hasn't ended or it's a tie
-	 */
-	public Player getWinner()
-	{
-		if (!isGameActive && player1Won && !player2Won)
-		{
-			return player1;
-		}
-		else if (!isGameActive && player2Won && !player1Won)
-		{
-			return player2;
-		}
-		return null;
+		return isPlayer1Turn ? player1TargetWord : player2TargetWord;
 	}
 	
 	/**
@@ -259,15 +198,6 @@ public class WordBattleModel
 		}
 		
 		return false;
-	}
-	
-	/**
-	 * Gets the target word for the current player
-	 * @return the target word that the current player is trying to guess
-	 */
-	public String getCurrentPlayerTargetWord()
-	{
-		return isPlayer1Turn ? player1TargetWord : player2TargetWord;
 	}
 	
 	/**

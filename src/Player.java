@@ -1,8 +1,8 @@
-import javax.swing.*;
-import java.awt.*;
-
-public class Player extends WordBattleView 
+/**
+ * Player class represents a player in the Word Battle game
+ */
+public class Player 
 {
-
 }
+
 

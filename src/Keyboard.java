@@ -24,7 +24,6 @@ public class Keyboard extends JPanel implements KeyListener
 	private JTextField[][] currentGridPlayer1;
 	private JTextField[][] currentGridPlayer2;
 	private int currentRow;
-	private int currentCol;
 	private String player1Name;
 	private String player2Name;
 	private WordBattleModel model;
@@ -104,7 +103,6 @@ public class Keyboard extends JPanel implements KeyListener
 			{
 				setCurrentTextField(textField);
 				currentRow = row;
-				currentCol = col;
 				setCurrentGrid(grid, row);
 			}
 		});
@@ -294,10 +292,14 @@ public class Keyboard extends JPanel implements KeyListener
 					JTextField[][] currentGrid = getCurrentGrid();
 					if (currentGrid != null && currentRow < currentGrid.length)
 					{
-						int nextCol = currentCol + 1;
-						if (nextCol < GRID_COLS && nextCol < currentGrid[currentRow].length)
+						// Move to next field in the same row
+						for (int col = 0; col < currentGrid[currentRow].length - 1; col++)
 						{
-							currentGrid[currentRow][nextCol].requestFocus();
+							if (currentGrid[currentRow][col] == currentTextField)
+							{
+								currentGrid[currentRow][col + 1].requestFocus();
+								break;
+							}
 						}
 					}
 				});
@@ -315,15 +317,23 @@ public class Keyboard extends JPanel implements KeyListener
 		{
 			if (currentTextField.getText().isEmpty())
 			{
+				// Move to previous field if current is empty
 				JTextField[][] currentGrid = getCurrentGrid();
 				if (currentGrid != null && currentRow >= 0 && currentRow < currentGrid.length)
 				{
-					int prevCol = currentCol - 1;
-					if (prevCol >= 0 && prevCol < currentGrid[currentRow].length)
+					for (int col = currentGrid[currentRow].length - 1; col >= 0; col--)
 					{
-						JTextField prevField = currentGrid[currentRow][prevCol];
-						clearTextField(prevField);
-						SwingUtilities.invokeLater(() -> prevField.requestFocus());
+						if (currentGrid[currentRow][col] == currentTextField)
+						{
+							// Found current position, move to previous
+							if (col > 0)
+							{
+								JTextField prevField = currentGrid[currentRow][col - 1];
+								clearTextField(prevField);
+								SwingUtilities.invokeLater(() -> prevField.requestFocus());
+							}
+							break;
+						}
 					}
 				}
 			}
@@ -430,7 +440,6 @@ public class Keyboard extends JPanel implements KeyListener
 		
 		// Reset current position
 		currentRow = 0;
-		currentCol = 0;
 		currentTextField = null;
 	}
 }

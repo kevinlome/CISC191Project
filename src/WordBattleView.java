@@ -704,31 +704,6 @@ public class WordBattleView
 		}
 	}
 	
-	/**
-	 * Move to the next cell in the grid
-	 */
-	private static void moveToNextCell(JTextField[][] grid, int currentRow, int currentCol)
-	{
-		int nextCol = currentCol + 1;
-		int nextRow = currentRow;
-		
-		// If we've reached the end of the row, move to the next row
-		if (nextCol >= COLS)
-		{
-			nextCol = 0;
-			nextRow++;
-		}
-		
-		// If we've reached the end of the grid, wrap around or stop
-		if (nextRow >= ROWS)
-		{
-			nextRow = 0;
-		}
-		
-		// Focus on the next cell
-		grid[nextRow][nextCol].requestFocus();
-	}
-	
 }
 
 /**
