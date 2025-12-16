@@ -24,10 +24,8 @@ import javax.swing.text.DocumentFilter;
 
 public class WordBattleView
 {
-	
-	
-	private static String player1;
-	private static String player2;
+	private static Player player1;
+	private static Player player2;
 	private static final int ROWS = 6;
 	private static final int COLS = 5;
 	private static JTextField[][] boxes;
@@ -112,17 +110,17 @@ public class WordBattleView
         );
 
         if (result == JOptionPane.OK_OPTION) {
-            player1 = field1.getText().isBlank() ? "Player 1" : field1.getText();
-            player2 = field2.getText().isBlank() ? "Player 2" : field2.getText();
+            String p1Name = field1.getText().isBlank() ? "Player 1" : field1.getText();
+            String p2Name = field2.getText().isBlank() ? "Player 2" : field2.getText();
+            player1 = new Player(p1Name);
+            player2 = new Player(p2Name);
         } else {
-            player1 = "Player 1";
-            player2 = "Player 2";
+            player1 = new Player("Player 1");
+            player2 = new Player("Player 2");
         }
 		
-		// Create Player instances and initialize the model
-		Player p1 = new Player();
-		Player p2 = new Player();
-		model = new WordBattleModel(p1, p2);
+		// Initialize the model with the players
+		model = new WordBattleModel(player1, player2);
 		model.startGame();
 		
 		// Initialize completed rows tracking
@@ -207,7 +205,7 @@ public class WordBattleView
 		
 		keyboard = new Keyboard();
 		keyboard.setModel(model);
-		keyboard.setPlayerNames(player1, player2);
+		keyboard.setPlayerNames(player1.getName(), player2.getName());
 		frame.add(keyboard, BorderLayout.SOUTH);
 		
 		JPanel centerPanel = new JPanel();
@@ -426,7 +424,7 @@ public class WordBattleView
 		gridWrapper1.setBackground(greyColor1);
 		gridWrapper1.setLayout(new java.awt.BorderLayout());
 		gridWrapper1.setPreferredSize(new Dimension(300,400));
-		JLabel player1Label = new JLabel(player1, SwingConstants.CENTER);
+		JLabel player1Label = new JLabel(player1.getName(), SwingConstants.CENTER);
 		player1Label.setForeground(Color.BLACK);
 		player1Label.setFont(new Font("Arial", Font.BOLD, 24));
 		gridWrapper1.add(player1Label, BorderLayout.NORTH);
@@ -437,7 +435,7 @@ public class WordBattleView
 		gridWrapper2.setBackground(greyColor1);
 		gridWrapper2.setLayout(new java.awt.BorderLayout());
 		gridWrapper2.setPreferredSize(new Dimension(300,400));
-		JLabel player2Label = new JLabel(player2, SwingConstants.CENTER);
+		JLabel player2Label = new JLabel(player2.getName(), SwingConstants.CENTER);
 		player2Label.setForeground(Color.BLACK);
 		player2Label.setFont(new Font("Arial", Font.BOLD, 24));
 		gridWrapper2.add(player2Label, BorderLayout.NORTH);
@@ -510,7 +508,7 @@ public class WordBattleView
 				keyboard.updateButtonColor(letter, feedback[i]);
 			}
 			
-			String playerName = model.isPlayer1Turn() ? player1 : player2;
+			String playerName = model.isPlayer1Turn() ? player1.getName() : player2.getName();
 			int choice = JOptionPane.showOptionDialog(null,
 				playerName + " wins! The word was: " + guess.toUpperCase() + 
 				"\n\nPlayer 1 target: " + model.getPlayer1TargetWord().toUpperCase() +
@@ -603,7 +601,7 @@ public class WordBattleView
 			currentRow2 = nextRow;
 		}
 		
-		JOptionPane.showMessageDialog(null, (model.isPlayer1Turn() ? player1 : player2) + "'s Turn!");
+		JOptionPane.showMessageDialog(null, (model.isPlayer1Turn() ? player1.getName() : player2.getName()) + "'s Turn!");
 		
 		// Update keyboard feedback to show the new player's feedback
 		keyboard.updateKeyboardFeedback();
@@ -620,10 +618,10 @@ public class WordBattleView
 	 */
 	private static void restartGame()
 	{
-		// Reset the model with new target words
-		Player p1 = new Player();
-		Player p2 = new Player();
-		model = new WordBattleModel(p1, p2);
+		// Reset players and model with new target words
+		player1.reset();
+		player2.reset();
+		model = new WordBattleModel(player1, player2);
 		model.startGame();
 		
 		// Reset current row tracking first
