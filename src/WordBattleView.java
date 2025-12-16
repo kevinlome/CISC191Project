@@ -34,6 +34,7 @@ public class WordBattleView
 	private static JTextField[][] boxes2;
 	private static Keyboard keyboard;
 	private static WordBattleModel model;
+	private static JFrame frame;
 	private static int currentRow1 = 0;
 	private static int currentRow2 = 0;
 	private static final Color CORRECT_COLOR = new Color(106, 170, 100); // Green
@@ -138,7 +139,7 @@ public class WordBattleView
 		}
 		
 		//Creates JFrame for main application
-		JFrame frame = new JFrame("Word Battle");
+		frame = new JFrame("Word Battle");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(1920,1080);
 		frame.setLayout(new BorderLayout (10,10));
@@ -510,11 +511,26 @@ public class WordBattleView
 			}
 			
 			String playerName = model.isPlayer1Turn() ? player1 : player2;
-			JOptionPane.showMessageDialog(null, 
+			int choice = JOptionPane.showOptionDialog(null,
 				playerName + " wins! The word was: " + guess.toUpperCase() + 
 				"\n\nPlayer 1 target: " + model.getPlayer1TargetWord().toUpperCase() +
-				"\nPlayer 2 target: " + model.getPlayer2TargetWord().toUpperCase());
+				"\nPlayer 2 target: " + model.getPlayer2TargetWord().toUpperCase(),
+				"Game Over",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.INFORMATION_MESSAGE,
+				null,
+				new String[]{"Play Again", "Close"},
+				"Play Again");
+			
 			model.endGame();
+			if (choice == JOptionPane.YES_OPTION)
+			{
+				restartGame();
+			}
+			else
+			{
+				System.exit(0);
+			}
 			return;
 		}
 		
@@ -551,13 +567,26 @@ public class WordBattleView
 		
 		if (nextRow >= ROWS)
 		{
-			String targetWord = !model.isPlayer1Turn() ? model.getPlayer1TargetWord() : model.getPlayer2TargetWord();
-			String playerName = !model.isPlayer1Turn() ? player1 : player2;
-			JOptionPane.showMessageDialog(null, 
-				playerName + " didn't guess the word!\n\nThe word was: " + targetWord.toUpperCase() +
-				"\n\nPlayer 1 target: " + model.getPlayer1TargetWord().toUpperCase() +
-				"\nPlayer 2 target: " + model.getPlayer2TargetWord().toUpperCase());
+			int choice = JOptionPane.showOptionDialog(null, 
+				"Both players lost!\n\n" +
+				"Player 1 target: " + model.getPlayer1TargetWord().toUpperCase() +
+				"\nPlayer 2 target: " + model.getPlayer2TargetWord().toUpperCase(),
+				"Game Over",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.INFORMATION_MESSAGE,
+				null,
+				new String[]{"Play Again", "Close"},
+				"Play Again");
+			
 			model.endGame();
+			if (choice == JOptionPane.YES_OPTION)
+			{
+				restartGame();
+			}
+			else
+			{
+				System.exit(0);
+			}
 			return;
 		}
 		
@@ -583,6 +612,65 @@ public class WordBattleView
 		SwingUtilities.invokeLater(() -> {
 			nextGrid[nextRow][0].requestFocus();
 			keyboard.setCurrentGrid(nextGrid, nextRow);
+		});
+	}
+	
+	/**
+	 * Restart the game by resetting all game state
+	 */
+	private static void restartGame()
+	{
+		// Reset the model with new target words
+		Player p1 = new Player();
+		Player p2 = new Player();
+		model = new WordBattleModel(p1, p2);
+		model.startGame();
+		
+		// Reset current row tracking first
+		currentRow1 = 0;
+		currentRow2 = 0;
+		
+		// Reset completed rows tracking and focus redirect flags
+		for (int i = 0; i < ROWS; i++)
+		{
+			completedRows1[i] = false;
+			completedRows2[i] = false;
+			focusRedirecting1[i] = false;
+			focusRedirecting2[i] = false;
+		}
+		
+		// Clear all grid boxes and reset their state
+		for (int row = 0; row < ROWS; row++)
+		{
+			for (int col = 0; col < COLS; col++)
+			{
+				// Clear Player 1 grid
+				AbstractDocument doc1 = (AbstractDocument) boxes[row][col].getDocument();
+				doc1.setDocumentFilter(null); // Remove filter temporarily
+				boxes[row][col].setText("");
+				doc1.setDocumentFilter(new LetterOnlyFilter()); // Restore filter
+				boxes[row][col].setBackground(DEFAULT_COLOR);
+				boxes[row][col].setEditable(true);
+				boxes[row][col].setCaretColor(Color.WHITE);
+				
+				// Clear Player 2 grid
+				AbstractDocument doc2 = (AbstractDocument) boxes2[row][col].getDocument();
+				doc2.setDocumentFilter(null); // Remove filter temporarily
+				boxes2[row][col].setText("");
+				doc2.setDocumentFilter(new LetterOnlyFilter()); // Restore filter
+				boxes2[row][col].setBackground(DEFAULT_COLOR);
+				boxes2[row][col].setEditable(true);
+				boxes2[row][col].setCaretColor(Color.WHITE);
+			}
+		}
+		
+		// Reset keyboard state
+		keyboard.resetGame(model);
+		
+		// Set focus to Player 1's first cell
+		SwingUtilities.invokeLater(() -> {
+			boxes[0][0].requestFocus();
+			keyboard.setCurrentGrid(boxes, 0);
 		});
 	}
 	

@@ -403,4 +403,34 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	@Override
 	public void keyTyped(KeyEvent e) {}
+	
+	/**
+	 * Reset the keyboard state for a new game
+	 */
+	public void resetGame(WordBattleModel newModel)
+	{
+		this.model = newModel;
+		
+		// Reset all letter button colors
+		for (JButton button : letterButtons.values())
+		{
+			button.setBackground(BUTTON_COLOR);
+			button.setForeground(TEXT_COLOR);
+		}
+		
+		// Reset feedback maps
+		String[] allLetters = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
+		                       "A", "S", "D", "F", "G", "H", "J", "K", "L",
+		                       "Z", "X", "C", "V", "B", "N", "M"};
+		for (String letter : allLetters)
+		{
+			player1Feedback.put(letter, 0);
+			player2Feedback.put(letter, 0);
+		}
+		
+		// Reset current position
+		currentRow = 0;
+		currentCol = 0;
+		currentTextField = null;
+	}
 }
