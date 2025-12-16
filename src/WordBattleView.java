@@ -42,6 +42,8 @@ public class WordBattleView
 	private static final Color DEFAULT_COLOR = new Color(60, 60, 60); // Default dark background
 	private static boolean[] completedRows1; // Track completed rows for Player 1
 	private static boolean[] completedRows2; // Track completed rows for Player 2
+	private static boolean[] focusRedirecting1; // Prevent focus redirect loops for Player 1
+	private static boolean[] focusRedirecting2; // Prevent focus redirect loops for Player 2
 
 	public static void main(String[] args)
 	{
@@ -125,10 +127,14 @@ public class WordBattleView
 		// Initialize completed rows tracking
 		completedRows1 = new boolean[ROWS];
 		completedRows2 = new boolean[ROWS];
+		focusRedirecting1 = new boolean[ROWS];
+		focusRedirecting2 = new boolean[ROWS];
 		for (int i = 0; i < ROWS; i++)
 		{
 			completedRows1[i] = false;
 			completedRows2[i] = false;
+			focusRedirecting1[i] = false;
+			focusRedirecting2[i] = false;
 		}
 		
 		//Creates JFrame for main application
@@ -247,14 +253,16 @@ public class WordBattleView
 					@Override
 					public void focusGained(java.awt.event.FocusEvent e)
 					{
-						// Only allow focus if this is the current row and not completed
-						if (gridRow == currentRow1 && !completedRows1[gridRow])
+						// Only allow focus if this is the current row and not completed, and it's Player 1's turn
+						if (model.isPlayer1Turn() && gridRow == currentRow1 && !completedRows1[gridRow])
 						{
 							keyboard.setCurrentGrid(boxes, gridRow);
+							focusRedirecting1[gridRow] = false;
 						}
-						else
+						else if (model.isPlayer1Turn() && !focusRedirecting1[gridRow])
 						{
-							// Move focus back to the current row
+							// Move focus back to the current row for Player 1 (only once to prevent loop)
+							focusRedirecting1[gridRow] = true;
 							boxes[currentRow1][0].requestFocus();
 						}
 					}
@@ -347,14 +355,16 @@ public class WordBattleView
 					@Override
 					public void focusGained(java.awt.event.FocusEvent e)
 					{
-						// Only allow focus if this is the current row and not completed
-						if (gridRow == currentRow2 && !completedRows2[gridRow])
+						// Only allow focus if this is the current row and not completed, and it's Player 2's turn
+						if (!model.isPlayer1Turn() && gridRow == currentRow2 && !completedRows2[gridRow])
 						{
 							keyboard.setCurrentGrid(boxes2, gridRow);
+							focusRedirecting2[gridRow] = false;
 						}
-						else
+						else if (!model.isPlayer1Turn() && !focusRedirecting2[gridRow])
 						{
-							// Move focus back to the current row
+							// Move focus back to the current row for Player 2 (only once to prevent loop)
+							focusRedirecting2[gridRow] = true;
 							boxes2[currentRow2][0].requestFocus();
 						}
 					}
@@ -553,12 +563,8 @@ public class WordBattleView
 		
 		// Switch to next player - use the correct grid based on whose turn it is
 		JTextField[][] nextGrid = model.isPlayer1Turn() ? boxes : boxes2;
-		JOptionPane.showMessageDialog(null, (model.isPlayer1Turn() ? player1 : player2) + "'s Turn!");
 		
-		// Update keyboard feedback to show the new player's feedback
-		keyboard.updateKeyboardFeedback();
-		
-		// Update current row tracking
+		// Update current row tracking BEFORE setting focus to allow focus listener to pass
 		if (nextGrid == boxes)
 		{
 			currentRow1 = nextRow;
@@ -568,8 +574,16 @@ public class WordBattleView
 			currentRow2 = nextRow;
 		}
 		
-		nextGrid[nextRow][0].requestFocus();
-		keyboard.setCurrentGrid(nextGrid, nextRow);
+		JOptionPane.showMessageDialog(null, (model.isPlayer1Turn() ? player1 : player2) + "'s Turn!");
+		
+		// Update keyboard feedback to show the new player's feedback
+		keyboard.updateKeyboardFeedback();
+		
+		// Ensure focus is set to the first input box after dialog closes
+		SwingUtilities.invokeLater(() -> {
+			nextGrid[nextRow][0].requestFocus();
+			keyboard.setCurrentGrid(nextGrid, nextRow);
+		});
 	}
 	
 	/**
