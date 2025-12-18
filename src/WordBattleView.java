@@ -21,35 +21,94 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 
+/**
+ * WordBattleView represents the graphical user interface for the Word Battle game.
+ * 
+ * This class manages the main game window and all visual components, including:
+ * - Player input panels for entering player names
+ * - Two 6x5 grids for each player's guesses
+ * - A keyboard interface for entering letters
+ * - Game flow management (starting, playing, restarting)
+ * - Visual feedback through color-coded cells (correct, wrong position, not in word)
+ * 
+ * The class uses a Model-View architecture pattern where WordBattleModel handles game logic
+ * and WordBattleView handles all presentation and user interaction.
+ * 
+ * @author Word Battle Development Team
+ * @version 1.0
+ */
 public class WordBattleView
 {
+	/** Player 1 object */
 	private static Player player1;
+	
+	/** Player 2 object */
 	private static Player player2;
+	
+	/** Number of rows in the guess grid (maximum guesses allowed) */
 	private static final int ROWS = 6;
+	
+	/** Number of columns in the guess grid (word length) */
 	private static final int COLS = 5;
+	
+	/** Text field grid for Player 1's guesses */
 	private static JTextField[][] boxes;
+	
+	/** Text field grid for Player 2's guesses */
 	private static JTextField[][] boxes2;
+	
+	/** Virtual keyboard component for letter input */
 	private static Keyboard keyboard;
+	
+	/** Game model containing game logic and state */
 	private static WordBattleModel model;
+	
+	/** Main application frame */
 	private static JFrame frame;
+	
+	/** Current row being played by Player 1 */
 	private static int currentRow1 = 0;
+	
+	/** Current row being played by Player 2 */
 	private static int currentRow2 = 0;
-	private static final Color CORRECT_COLOR = new Color(106, 170, 100); // Green
-	private static final Color WRONG_POSITION_COLOR = new Color(181, 159, 59); // Yellow
-	private static final Color NOT_IN_WORD_COLOR = new Color(58, 58, 58); // Dark
-																			// Gray
-	private static final Color DEFAULT_COLOR = new Color(60, 60, 60); // Default
-																		// dark
-																		// background
-	private static boolean[] completedRows1; // Track completed rows for Player
-												// 1
-	private static boolean[] completedRows2; // Track completed rows for Player
-												// 2
-	private static boolean[] focusRedirecting1; // Prevent focus redirect loops
-												// for Player 1
-	private static boolean[] focusRedirecting2; // Prevent focus redirect loops
-												// for Player 2
+	
+	/** Color for correct letter in correct position (Green) */
+	private static final Color CORRECT_COLOR = new Color(106, 170, 100);
+	
+	/** Color for correct letter in wrong position (Yellow) */
+	private static final Color WRONG_POSITION_COLOR = new Color(181, 159, 59);
+	
+	/** Color for letter not in target word (Dark Gray) */
+	private static final Color NOT_IN_WORD_COLOR = new Color(58, 58, 58);
+	
+	/** Default color for empty or unused cells (Dark background) */
+	private static final Color DEFAULT_COLOR = new Color(60, 60, 60);
+	
+	/** Tracks which rows have been completed for Player 1 */
+	private static boolean[] completedRows1;
+	
+	/** Tracks which rows have been completed for Player 2 */
+	private static boolean[] completedRows2;
+	
+	/** Prevents focus redirect loops for Player 1 rows */
+	private static boolean[] focusRedirecting1;
+	
+	/** Prevents focus redirect loops for Player 2 rows */
+	private static boolean[] focusRedirecting2;
 
+	/**
+	 * Main entry point for the Word Battle application.
+	 * 
+	 * This method initializes the game by:
+	 * - Prompting players to enter their names via a dialog
+	 * - Setting up the game model with both players
+	 * - Creating the main game window with two 6x5 letter grids
+	 * - Initializing the virtual keyboard interface
+	 * - Setting up event listeners for user input and game flow
+	 * - Displaying the game window and setting initial focus
+	 * 
+	 * @param args Command-line arguments (not used)
+	 */
 	public static void main(String[] args)
 	{
 
@@ -502,7 +561,22 @@ public class WordBattleView
 	}
 
 	/**
-	 * Handle guess submission from ENTER key
+	 * Handles the submission of a player's guess when the ENTER key is pressed.
+	 * 
+	 * This method performs the following operations:
+	 * - Collects the 5 letters entered by the player from the grid
+	 * - Validates that all 5 cells contain letters
+	 * - Checks if the word is valid using the WordChecker API
+	 * - Evaluates the guess against the target word
+	 * - Updates grid cell colors based on feedback (correct, wrong position, not in word)
+	 * - Determines win/loss conditions
+	 * - Handles turn switching between players
+	 * - Displays appropriate game status dialogs
+	 * - Offers replay or exit options when the game ends
+	 * 
+	 * @param grid the JTextField grid for the current player (boxes or boxes2)
+	 * @param currentRow the row index where the guess was submitted (for legacy compatibility)
+	 * @param row the actual row index of the submitted guess
 	 */
 	private static void handleGuessSubmission(JTextField[][] grid,
 			int currentRow, int row)
@@ -669,7 +743,18 @@ public class WordBattleView
 	}
 
 	/**
-	 * Restart the game by resetting all game state
+	 * Restarts the game by resetting all game state and clearing the UI.
+	 * 
+	 * This method performs the following operations:
+	 * - Resets both players with new target words
+	 * - Creates a new game model with the reset players
+	 * - Starts a new game session
+	 * - Resets all row tracking and focus redirect flags
+	 * - Clears all grid cells and restores their editable state
+	 * - Resets keyboard state and button colors
+	 * - Sets focus to Player 1's first grid cell to begin the new game
+	 * 
+	 * This method is called when a player chooses "Play Again" after the game ends.
 	 */
 	private static void restartGame()
 	{
@@ -732,7 +817,20 @@ public class WordBattleView
 	}
 
 	/**
-	 * Update grid cell colors based on guess feedback
+	 * Updates grid cell colors based on guess feedback.
+	 * 
+	 * This method iterates through each cell in the specified row and applies
+	 * color coding based on the feedback from the model:
+	 * - Green (CORRECT_COLOR) for letters in the correct position
+	 * - Yellow (WRONG_POSITION_COLOR) for correct letters in wrong positions
+	 * - Dark Gray (NOT_IN_WORD_COLOR) for letters not in the target word
+	 * - Dark (DEFAULT_COLOR) for unused cells
+	 * 
+	 * The method also hides the text cursor by setting its color to match the background.
+	 * 
+	 * @param grid the JTextField grid to update (boxes or boxes2)
+	 * @param row the row index in the grid to update
+	 * @param feedback an array of feedback values for each cell (0-3 representing feedback types)
 	 */
 	public static void updateGridFeedback(JTextField[][] grid, int row,
 			int[] feedback)
@@ -766,10 +864,38 @@ public class WordBattleView
 }
 
 /**
- * Document filter that only allows single uppercase letters
+ * Document filter that only allows single uppercase letters in a text field.
+ * 
+ * This filter enforces strict input validation for the Word Battle game's letter grid cells.
+ * It ensures that:
+ * - Only single alphabetic characters are allowed
+ * - Characters are automatically converted to uppercase
+ * - Only one character can be entered per field
+ * - Characters can be freely removed/backspaced
+ * 
+ * This prevents invalid input and maintains data consistency throughout the game.
+ * 
+ * @author Word Battle Development Team
+ * @version 1.0
  */
 class LetterOnlyFilter extends DocumentFilter
 {
+	/**
+	 * Invoked prior to insertion of text into the specified document.
+	 * 
+	 * This method validates that the incoming text:
+	 * - Is exactly one character
+	 * - Is an alphabetic character
+	 * - Only allows insertion if the field is currently empty
+	 * 
+	 * The character is automatically converted to uppercase before insertion.
+	 * 
+	 * @param fb the FilterBypass that allows manipulation of the document
+	 * @param offset the location in the document where the text will be inserted
+	 * @param string the text to insert (should be single letter if allowed)
+	 * @param attr the attributes associated with the inserted text
+	 * @throws BadLocationException if the offset is invalid
+	 */
 	@Override
 	public void insertString(FilterBypass fb, int offset, String string,
 			AttributeSet attr) throws BadLocationException
@@ -789,6 +915,22 @@ class LetterOnlyFilter extends DocumentFilter
 		}
 	}
 
+	/**
+	 * Replaces text in the document with validation.
+	 * 
+	 * This method validates that the replacement text:
+	 * - Is exactly one character
+	 * - Is an alphabetic character
+	 * 
+	 * The character is automatically converted to uppercase before replacement.
+	 * 
+	 * @param fb the FilterBypass that allows manipulation of the document
+	 * @param offset the location in the document where replacement begins
+	 * @param length the number of characters to replace
+	 * @param text the text to insert as replacement (should be single letter if allowed)
+	 * @param attrs the attributes associated with the replacement text
+	 * @throws BadLocationException if the offset or length is invalid
+	 */
 	@Override
 	public void replace(FilterBypass fb, int offset, int length, String text,
 			AttributeSet attrs) throws BadLocationException
@@ -803,6 +945,17 @@ class LetterOnlyFilter extends DocumentFilter
 			// Replace with the uppercase letter
 			super.replace(fb, offset, length, upperText, attrs);
 		}
+	}
+
+	/**
+	 * Removes characters from the document.
+	 * 
+	 * This method allows unrestricted removal of characters, enabling players to
+	 * delete letters they've entered and start over.
+	 * 
+	 * @param fb the FilterBypass object that allows manipulation of the document
+	 * @param offset the offset at which to start removal
+	 * @param length the number of characters to remove
 	}
 
 	/**
