@@ -1,4 +1,17 @@
 /**
+ * Lead Author(s):
+ * @author Kevin Lome
+ * @author Nick Damion
+ *
+ * Other contributors:
+ *
+ * References:
+ * Morelli, R., & Walde, R. (2016). Java, Java, Java: Object-Oriented Problem Solving.
+ * Retrieved from https://open.umn.edu/opentextbooks/textbooks/java-java-java-object-oriented-problem-solving
+ *
+ * Version/date: December 18, 2025
+ *
+ * Responsibilities:
  * YellowLetter - Letter is in word but wrong position
  */
 public class YellowLetter extends Letter {

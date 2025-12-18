@@ -1,3 +1,19 @@
+/**
+ * Lead Author(s):
+ * @author Kevin Lome
+ * @author Nick Damion
+ *
+ * Other contributors:
+ *
+ * References:
+ * Morelli, R., & Walde, R. (2016). Java, Java, Java: Object-Oriented Problem Solving.
+ * Retrieved from https://open.umn.edu/opentextbooks/textbooks/java-java-java-object-oriented-problem-solving
+ *
+ * Version/date: December 18, 2025
+ *
+ * Responsibilities:
+ * WordGenerator class for managing and retrieving words from a word list
+ */
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
