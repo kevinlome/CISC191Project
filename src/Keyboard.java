@@ -14,11 +14,13 @@ public class Keyboard extends JPanel implements KeyListener
 	private static final Color GREY = new Color(82, 81, 81);
 	private static final Color TEXT_COLOR = Color.WHITE;
 	private static final Color BUTTON_COLOR = new Color(129, 131, 132);
-	
-	private String[] row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
-	private String[] row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L"};
-	private String[] row3 = {"DELETE", "Z", "X", "C", "V", "B", "N", "M", "ENTER"};
-	
+
+	private String[] row1 = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O",
+			"P" };
+	private String[] row2 = { "A", "S", "D", "F", "G", "H", "J", "K", "L" };
+	private String[] row3 = { "DELETE", "Z", "X", "C", "V", "B", "N", "M",
+			"ENTER" };
+
 	private Map<String, JButton> letterButtons;
 	private JTextField currentTextField;
 	private JTextField[][] currentGridPlayer1;
@@ -28,38 +30,40 @@ public class Keyboard extends JPanel implements KeyListener
 	private String player1Name;
 	private String player2Name;
 	private WordBattleModel model;
-	private Map<String, Integer> player1Feedback; // Feedback for Player 1's letters
-	private Map<String, Integer> player2Feedback; // Feedback for Player 2's letters
+	private Map<String, Integer> player1Feedback; // Feedback for Player 1's
+													// letters
+	private Map<String, Integer> player2Feedback; // Feedback for Player 2's
+													// letters
 	private static final int GRID_COLS = 5;
-	
+
 	public Keyboard()
 	{
 		this.letterButtons = new HashMap<>();
 		this.player1Feedback = new HashMap<>();
 		this.player2Feedback = new HashMap<>();
 		this.activeGrid = null;
-		
+
 		// Initialize feedback maps with all letters set to 0 (unused)
-		String[] allLetters = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
-		                       "A", "S", "D", "F", "G", "H", "J", "K", "L",
-		                       "Z", "X", "C", "V", "B", "N", "M"};
+		String[] allLetters = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O",
+				"P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C",
+				"V", "B", "N", "M" };
 		for (String letter : allLetters)
 		{
 			player1Feedback.put(letter, 0);
 			player2Feedback.put(letter, 0);
 		}
-		
+
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBackground(GREY);
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setPreferredSize(new Dimension(0, 300));
-		
+
 		setFocusable(true);
 		addKeyListener(this);
-		
+
 		createKeyboardRows();
 	}
-	
+
 	/**
 	 * Set both player grids for keyboard access
 	 */
@@ -68,7 +72,7 @@ public class Keyboard extends JPanel implements KeyListener
 		this.currentGridPlayer1 = player1Grid;
 		this.currentGridPlayer2 = player2Grid;
 	}
-	
+
 	/**
 	 * Set the current grid being used
 	 */
@@ -77,7 +81,7 @@ public class Keyboard extends JPanel implements KeyListener
 		this.activeGrid = grid;
 		this.currentRow = row;
 	}
-	
+
 	/**
 	 * Set the current text field that keyboard will input to
 	 */
@@ -85,11 +89,12 @@ public class Keyboard extends JPanel implements KeyListener
 	{
 		this.currentTextField = textField;
 	}
-	
+
 	/**
 	 * Register a text field with focus listeners
 	 */
-	public void registerTextField(JTextField textField, JTextField[][] grid, int row, int col)
+	public void registerTextField(JTextField textField, JTextField[][] grid,
+			int row, int col)
 	{
 		textField.addFocusListener(new java.awt.event.FocusAdapter()
 		{
@@ -101,7 +106,7 @@ public class Keyboard extends JPanel implements KeyListener
 				setCurrentGrid(grid, row);
 			}
 		});
-		
+
 		textField.addKeyListener(new java.awt.event.KeyAdapter()
 		{
 			@Override
@@ -117,12 +122,13 @@ public class Keyboard extends JPanel implements KeyListener
 					handleEnter();
 					e.consume();
 				}
-				// For letter keys, don't consume - let the text field handle it normally
+				// For letter keys, don't consume - let the text field handle it
+				// normally
 				// through DocumentFilter to avoid duplicate input
 			}
 		});
 	}
-	
+
 	/**
 	 * Update keyboard button color based on feedback
 	 */
@@ -149,7 +155,7 @@ public class Keyboard extends JPanel implements KeyListener
 			button.setBackground(color);
 			button.setOpaque(true);
 			button.repaint();
-			
+
 			// Store in the appropriate player's feedback map
 			if (model != null)
 			{
@@ -164,18 +170,19 @@ public class Keyboard extends JPanel implements KeyListener
 			}
 		}
 	}
-	
+
 	/**
 	 * Update keyboard to show feedback for current player's turn
 	 */
 	public void updateKeyboardFeedback()
 	{
-		if (model == null)
-			return;
-		
+		if (model == null) return;
+
 		// Get the feedback map for the current player
-		Map<String, Integer> currentFeedback = model.isPlayer1Turn() ? player1Feedback : player2Feedback;
-		
+		Map<String, Integer> currentFeedback = model.isPlayer1Turn()
+				? player1Feedback
+				: player2Feedback;
+
 		// Update all button colors to reflect current player's feedback
 		for (String letter : letterButtons.keySet())
 		{
@@ -204,34 +211,34 @@ public class Keyboard extends JPanel implements KeyListener
 			}
 		}
 	}
-	
+
 	private void createKeyboardRows()
 	{
 		JPanel row1Panel = createRow(row1);
 		add(row1Panel);
 		add(Box.createVerticalStrut(2));
-		
+
 		JPanel row2Panel = createRow(row2);
 		row2Panel.setBorder(BorderFactory.createEmptyBorder(0, 40, 0, 40));
 		add(row2Panel);
 		add(Box.createVerticalStrut(2));
-		
+
 		JPanel row3Panel = createRow(row3);
 		row3Panel.setBorder(BorderFactory.createEmptyBorder(0, 60, 0, 60));
 		add(row3Panel);
 	}
-	
+
 	private JPanel createRow(String[] letters)
 	{
 		JPanel rowPanel = new JPanel();
 		rowPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 8, 0));
 		rowPanel.setBackground(GREY);
-		
+
 		for (String letter : letters)
 		{
 			JButton button = new JButton(letter);
 			button.setFont(new Font("Arial", Font.BOLD, 16));
-			
+
 			if (letter.equals("DELETE") || letter.equals("ENTER"))
 			{
 				button.setPreferredSize(new Dimension(130, 65));
@@ -244,7 +251,7 @@ public class Keyboard extends JPanel implements KeyListener
 				button.setMinimumSize(new Dimension(65, 65));
 				button.setMaximumSize(new Dimension(65, 65));
 			}
-			
+
 			button.setBackground(BUTTON_COLOR);
 			button.setForeground(TEXT_COLOR);
 			button.setBorderPainted(false);
@@ -252,22 +259,21 @@ public class Keyboard extends JPanel implements KeyListener
 			button.setOpaque(true);
 			button.setMargin(new Insets(0, 0, 0, 0));
 			button.setFocusable(false);
-			
+
 			String finalLetter = letter;
 			button.addActionListener(e -> handleButtonClick(finalLetter));
-			
+
 			letterButtons.put(letter, button);
 			rowPanel.add(button);
 		}
-		
+
 		return rowPanel;
 	}
-	
+
 	private void handleButtonClick(String letter)
 	{
-		if (currentTextField == null)
-			return;
-		
+		if (currentTextField == null) return;
+
 		if (letter.equals("DELETE"))
 		{
 			handleDelete();
@@ -281,7 +287,7 @@ public class Keyboard extends JPanel implements KeyListener
 			handleLetterInput(letter);
 		}
 	}
-	
+
 	private void handleLetterInput(String letter)
 	{
 		if (currentTextField.getText().isEmpty())
@@ -289,13 +295,14 @@ public class Keyboard extends JPanel implements KeyListener
 			try
 			{
 				currentTextField.getDocument().insertString(0, letter, null);
-				
+
 				SwingUtilities.invokeLater(() -> {
 					JTextField[][] currentGrid = getCurrentGrid();
 					if (currentGrid != null && currentRow < currentGrid.length)
 					{
 						// Move to next field in the same row
-						for (int col = 0; col < currentGrid[currentRow].length - 1; col++)
+						for (int col = 0; col < currentGrid[currentRow].length
+								- 1; col++)
 						{
 							if (currentGrid[currentRow][col] == currentTextField)
 							{
@@ -312,7 +319,7 @@ public class Keyboard extends JPanel implements KeyListener
 			}
 		}
 	}
-	
+
 	private void handleDelete()
 	{
 		if (currentTextField != null)
@@ -321,18 +328,22 @@ public class Keyboard extends JPanel implements KeyListener
 			{
 				// Move to previous field if current is empty
 				JTextField[][] currentGrid = getCurrentGrid();
-				if (currentGrid != null && currentRow >= 0 && currentRow < currentGrid.length)
+				if (currentGrid != null && currentRow >= 0
+						&& currentRow < currentGrid.length)
 				{
-					for (int col = currentGrid[currentRow].length - 1; col >= 0; col--)
+					for (int col = currentGrid[currentRow].length
+							- 1; col >= 0; col--)
 					{
 						if (currentGrid[currentRow][col] == currentTextField)
 						{
 							// Found current position, move to previous
 							if (col > 0)
 							{
-								JTextField prevField = currentGrid[currentRow][col - 1];
+								JTextField prevField = currentGrid[currentRow][col
+										- 1];
 								clearTextField(prevField);
-								SwingUtilities.invokeLater(() -> prevField.requestFocus());
+								SwingUtilities.invokeLater(
+										() -> prevField.requestFocus());
 							}
 							break;
 						}
@@ -345,18 +356,19 @@ public class Keyboard extends JPanel implements KeyListener
 			}
 		}
 	}
-	
+
 	private void handleEnter()
 	{
 		if (currentTextField != null)
 		{
-			KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+			KeyboardFocusManager manager = KeyboardFocusManager
+					.getCurrentKeyboardFocusManager();
 			SwingUtilities.invokeLater(() -> {
 				currentTextField.postActionEvent();
 			});
 		}
 	}
-	
+
 	private void clearTextField(JTextField field)
 	{
 		try
@@ -372,7 +384,7 @@ public class Keyboard extends JPanel implements KeyListener
 			e.printStackTrace();
 		}
 	}
-	
+
 	private JTextField[][] getCurrentGrid()
 	{
 		// Return the actively set grid
@@ -381,29 +393,34 @@ public class Keyboard extends JPanel implements KeyListener
 			return activeGrid;
 		}
 		// Fallback to model-based determination if activeGrid is null
-		if (model != null && currentGridPlayer1 != null && currentGridPlayer2 != null)
+		if (model != null && currentGridPlayer1 != null
+				&& currentGridPlayer2 != null)
 		{
-			return model.isPlayer1Turn() ? currentGridPlayer1 : currentGridPlayer2;
+			return model.isPlayer1Turn() ? currentGridPlayer1
+					: currentGridPlayer2;
 		}
 		// Final fallback
-		return (currentGridPlayer1 != null) ? currentGridPlayer1 : currentGridPlayer2;
+		return (currentGridPlayer1 != null) ? currentGridPlayer1
+				: currentGridPlayer2;
 	}
-	
-	public void setModel(WordBattleModel model){
+
+	public void setModel(WordBattleModel model)
+	{
 		this.model = model;
 	}
-	
-	public void setPlayerNames(String player1Name, String player2Name){
+
+	public void setPlayerNames(String player1Name, String player2Name)
+	{
 		this.player1Name = player1Name;
 		this.player2Name = player2Name;
 	}
-	
+
 	@Override
 	public void keyPressed(KeyEvent e)
 	{
 		char keyChar = e.getKeyChar();
 		int keyCode = e.getKeyCode();
-		
+
 		if (Character.isLetter(keyChar))
 		{
 			handleLetterInput(String.valueOf(keyChar).toUpperCase());
@@ -420,13 +437,31 @@ public class Keyboard extends JPanel implements KeyListener
 			e.consume();
 		}
 	}
-	
+
+	/**
+	 * Handle key release events (KeyListener interface implementation).
+	 * 
+	 * Not used in this implementation - all keyboard handling occurs in keyPressed().
+	 * 
+	 * @param e the KeyEvent generated by the key release
+	 */
 	@Override
-	public void keyReleased(KeyEvent e) {}
-	
+	public void keyReleased(KeyEvent e)
+	{
+	}
+
+	/**
+	 * Handle key typed events (KeyListener interface implementation).
+	 * 
+	 * Not used in this implementation - all keyboard handling occurs in keyPressed().
+	 * 
+	 * @param e the KeyEvent generated by the key typed action
+	 */
 	@Override
-	public void keyTyped(KeyEvent e) {}
-	
+	public void keyTyped(KeyEvent e)
+	{
+	}
+
 	/**
 	 * Reset the keyboard state for a new game
 	 */
@@ -434,24 +469,24 @@ public class Keyboard extends JPanel implements KeyListener
 	{
 		this.model = newModel;
 		this.activeGrid = null;
-		
+
 		// Reset all letter button colors
 		for (JButton button : letterButtons.values())
 		{
 			button.setBackground(BUTTON_COLOR);
 			button.setForeground(TEXT_COLOR);
 		}
-		
+
 		// Reset feedback maps
-		String[] allLetters = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
-		                       "A", "S", "D", "F", "G", "H", "J", "K", "L",
-		                       "Z", "X", "C", "V", "B", "N", "M"};
+		String[] allLetters = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O",
+				"P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C",
+				"V", "B", "N", "M" };
 		for (String letter : allLetters)
 		{
 			player1Feedback.put(letter, 0);
 			player2Feedback.put(letter, 0);
 		}
-		
+
 		// Reset current position
 		currentRow = 0;
 		currentTextField = null;
