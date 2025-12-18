@@ -23,6 +23,7 @@ public class Keyboard extends JPanel implements KeyListener
 	private JTextField currentTextField;
 	private JTextField[][] currentGridPlayer1;
 	private JTextField[][] currentGridPlayer2;
+	private JTextField[][] activeGrid; // Track which grid is currently active
 	private int currentRow;
 	private String player1Name;
 	private String player2Name;
@@ -36,6 +37,7 @@ public class Keyboard extends JPanel implements KeyListener
 		this.letterButtons = new HashMap<>();
 		this.player1Feedback = new HashMap<>();
 		this.player2Feedback = new HashMap<>();
+		this.activeGrid = null;
 		
 		// Initialize feedback maps with all letters set to 0 (unused)
 		String[] allLetters = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
@@ -72,15 +74,8 @@ public class Keyboard extends JPanel implements KeyListener
 	 */
 	public void setCurrentGrid(JTextField[][] grid, int row)
 	{
-		if (grid == currentGridPlayer1)
-		{
-			currentGridPlayer1 = grid;
-		}
-		else if (grid == currentGridPlayer2)
-		{
-			currentGridPlayer2 = grid;
-		}
-		currentRow = row;
+		this.activeGrid = grid;
+		this.currentRow = row;
 	}
 	
 	/**
@@ -117,6 +112,13 @@ public class Keyboard extends JPanel implements KeyListener
 					handleDelete();
 					e.consume();
 				}
+				else if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER)
+				{
+					handleEnter();
+					e.consume();
+				}
+				// For letter keys, don't consume - let the text field handle it normally
+				// through DocumentFilter to avoid duplicate input
 			}
 		});
 	}
@@ -373,6 +375,17 @@ public class Keyboard extends JPanel implements KeyListener
 	
 	private JTextField[][] getCurrentGrid()
 	{
+		// Return the actively set grid
+		if (activeGrid != null)
+		{
+			return activeGrid;
+		}
+		// Fallback to model-based determination if activeGrid is null
+		if (model != null && currentGridPlayer1 != null && currentGridPlayer2 != null)
+		{
+			return model.isPlayer1Turn() ? currentGridPlayer1 : currentGridPlayer2;
+		}
+		// Final fallback
 		return (currentGridPlayer1 != null) ? currentGridPlayer1 : currentGridPlayer2;
 	}
 	
@@ -420,6 +433,7 @@ public class Keyboard extends JPanel implements KeyListener
 	public void resetGame(WordBattleModel newModel)
 	{
 		this.model = newModel;
+		this.activeGrid = null;
 		
 		// Reset all letter button colors
 		for (JButton button : letterButtons.values())

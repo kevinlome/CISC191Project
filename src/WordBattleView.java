@@ -115,8 +115,8 @@ public class WordBattleView
             player1 = new Player(p1Name);
             player2 = new Player(p2Name);
         } else {
-            player1 = new Player("Player 1");
-            player2 = new Player("Player 2");
+            // User clicked Cancel - exit without starting the game
+            System.exit(0);
         }
 		
 		// Initialize the model with the players
@@ -309,6 +309,9 @@ public class WordBattleView
 					handleGuessSubmission(boxes, gridRow, gridRow);
 				});
 				
+				// Register with keyboard
+				keyboard.registerTextField(textField, boxes, row, col);
+				
 				boxes[row][col] = textField;
 				guessGrid1.add(textField);
 			}
@@ -447,6 +450,13 @@ public class WordBattleView
 		keyboard.setGrids(boxes, boxes2);
 		
 		frame.setVisible(true);
+		
+		// Set initial focus to keyboard and first player's grid
+		SwingUtilities.invokeLater(() -> {
+			keyboard.requestFocus();
+			boxes[0][0].requestFocus();
+			keyboard.setCurrentGrid(boxes, 0);
+		});
 		
 	}
 	
